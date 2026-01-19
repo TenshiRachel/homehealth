@@ -1,0 +1,63 @@
+package com.example.homehealth.data.dao
+
+import android.util.Log
+import com.example.homehealth.data.models.User
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+
+class UserDao {
+    private val db = FirebaseFirestore.getInstance()
+
+    suspend fun createUser(user: User): Boolean {
+        return try {
+            Log.d("UserDao", "Starting createUser for: ${user.email}, UID: ${user.uid}")
+            db.collection("users")
+                .document(user.uid)
+                .set(user)
+                .await()
+            Log.d("UserDao", "Successfully created user in Firestore!")
+            true
+        } catch (e: Exception) {
+            Log.e("UserDao", "Failed to create user: ${e.message}", e)
+            false
+        }
+    }
+
+    suspend fun getUserById(userId: String): User? {
+        return try {
+            val doc = db.collection("users").document(userId).get().await()
+            val user = doc.toObject(User::class.java)
+            user
+        } catch (e: Exception){
+            Log.e("User", "Failed to retrieve user by id", e)
+            null
+        }
+    }
+
+    suspend fun getUserByEmail(email: String): User? {
+        return try {
+            val querySnapshot = db.collection("users")
+                .whereEqualTo("email", email)
+                .get()
+                .await()
+            querySnapshot.documents.firstOrNull()?.toObject(User::class.java)
+        } catch (e: Exception){
+            null
+        }
+    }
+
+    suspend fun getUsersByRole(role: String): List<User> {
+        return try {
+            val querySnapshot = db.collection("users")
+                .whereEqualTo("role", role)
+                .get()
+                .await()
+
+            querySnapshot.documents.mapNotNull { document ->
+                document.toObject(User::class.java)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+}

@@ -1,0 +1,28 @@
+package com.example.homehealth
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.navigation
+import com.example.homehealth.screens.IndexScreen
+import com.example.homehealth.screens.auth.LoginScreen
+import com.example.homehealth.screens.auth.RegisterScreen
+
+
+@Composable
+fun NavGraph(
+    navController: NavHostController
+){
+    NavHost(navController = navController, startDestination = "auth_graph"){
+        navigation(startDestination = "register_screen", route = "auth_graph"){
+            composable("register_screen"){ RegisterScreen(navController) }
+            composable("login_screen"){ LoginScreen(navController) }
+        }
+
+        composable("home_screen/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            IndexScreen(navController, userId)
+        }
+    }
+}
