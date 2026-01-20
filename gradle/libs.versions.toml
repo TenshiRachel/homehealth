@@ -12,6 +12,7 @@ material = "1.10.0"
 appcompat = "1.6.1"
 googleGmsGoogleServices = "4.4.4"
 constraintlayout = "2.1.4"
+materialIconsExtended = "1.7.8"
 navigationFragmentKtx = "2.6.0"
 navigationUiKtx = "2.6.0"
 navigationCompose = "2.8.5"
@@ -23,6 +24,7 @@ material3 = "1.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 google-firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
