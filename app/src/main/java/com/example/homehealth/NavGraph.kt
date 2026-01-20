@@ -20,9 +20,25 @@ fun NavGraph(
             composable("login_screen"){ LoginScreen(navController) }
         }
 
-        composable("home_screen/{userId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+        // Public(Patient) landing
+        composable("index_screen/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")!!
             IndexScreen(navController, userId)
         }
+
+        // 🔵 Caregiver landing
+        composable("schedule_screen") {
+            ScheduleScreen(navController)
+        }
+
+//        composable("home_screen/{userId}") { backStackEntry ->
+//            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+//            IndexScreen(navController, userId)
+//        }
     }
+}
+
+@Composable
+fun ScheduleScreen(x0: NavHostController) {
+    TODO("Not yet implemented")
 }

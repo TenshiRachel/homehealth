@@ -58,10 +58,28 @@ fun LoginScreen(navController: NavHostController){
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            authViewModel.loginFirebase(email, password) { success, message ->
-                if (success) {
-                    Log.d("Login", "Success, User ID: $message")
-                    navController.navigate("home_screen/$message")
+            authViewModel.loginFirebase(email, password) { success, message, user ->
+                if (success && user != null) {
+                    when (user.role){
+                        "public" -> {
+                            navController.navigate("index_screen/${user.uid}"){
+                                Log.d("Login", "Success, User ID: $message")
+                                popUpTo("login_screen") {inclusive}
+                            }
+                        }
+                        "caregiver" -> {
+                            Log.d("Login", "Success, User ID: $message")
+                            navController.navigate("caregiver_home/${user.uid}")
+                        }
+                        else -> {
+                            authViewModel.logout()
+                            Toast.makeText(
+                                context,
+                                "Unauthorized role",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 } else {
                     message?.let{
                         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()

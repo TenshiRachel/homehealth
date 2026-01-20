@@ -1,6 +1,7 @@
 package com.example.homehealth.viewmodels
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.homehealth.data.models.User
@@ -60,7 +61,7 @@ class AuthViewModel: ViewModel() {
         }
     }
 
-    fun loginFirebase(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    fun loginFirebase(email: String, password: String, onResult: (Boolean, String?, User?) -> Unit) {
         viewModelScope.launch {
             try {
                 // Firebase login
@@ -75,26 +76,26 @@ class AuthViewModel: ViewModel() {
 
                     if (user != null) {
                         // Return success and user id to the callback
-                        onResult(true, user.uid)
+                        onResult(true, user.uid, user)
                     } else {
                         // If no user found, return failure
-                        onResult(false, "User data not found.")
+                        onResult(false, "User data not found.", null)
                     }
                 } else {
                     // If Firebase UID is null
-                    onResult(false, "Login failed. Please try again.")
+                    onResult(false, "Login failed. Please try again.", null)
                 }
             } catch (e: FirebaseAuthInvalidUserException){
                 Log.e("FirebaseAuth", "Login failed", e)
-                onResult(false, "No user found with this email.")
+                onResult(false, "No user found with this email.", null)
             } catch (e: FirebaseAuthInvalidCredentialsException) {
                 // Handle any exceptions related to Firebase Authentication
                 Log.e("FirebaseAuth", "Login failed", e)
-                onResult(false, "Invalid credentials. Please try again.")
+                onResult(false, "Invalid credentials. Please try again.", null)
             } catch (e: Exception) {
                 // Catch any other exceptions
                 Log.e("FirebaseAuth", "Unexpected error", e)
-                onResult(false, "Unexpected error occurred.")
+                onResult(false, "Unexpected error occurred.", null)
             }
         }
     }
@@ -148,6 +149,15 @@ class AuthViewModel: ViewModel() {
             }
         }
     }
+
+    fun getCurrentUser(userId: String) {
+        viewModelScope.launch {
+            val user = userRepository.getUserById(userId)
+            currentUser.value = user
+        }
+    }
+
+    var currentUser = mutableStateOf<User?>(null)
 
     fun logout(){
         auth.signOut()
