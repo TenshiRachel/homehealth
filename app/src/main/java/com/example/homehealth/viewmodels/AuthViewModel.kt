@@ -150,15 +150,6 @@ class AuthViewModel: ViewModel() {
         }
     }
 
-    fun getCurrentUser(userId: String) {
-        viewModelScope.launch {
-            val user = userRepository.getUserById(userId)
-            currentUser.value = user
-        }
-    }
-
-    var currentUser = mutableStateOf<User?>(null)
-
     fun logout(){
         auth.signOut()
     }

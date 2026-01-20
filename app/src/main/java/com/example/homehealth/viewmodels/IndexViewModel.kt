@@ -1,5 +1,6 @@
 package com.example.homehealth.viewmodels
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,10 +15,20 @@ class IndexViewModel : ViewModel() {
     private val _caretakers = MutableLiveData<List<User>>()
     val caretakers: LiveData<List<User>> = _caretakers
 
-    fun fetchUsersByRole(){
+    // for populating screen with available caretakers
+    fun fetchCaretakersByRole(){
         viewModelScope.launch {
-            val fetchedUsers = userRepository.getUserByRole("caretaker")
-            _caretakers.postValue(fetchedUsers)
+            val fetchedCaretakers = userRepository.getUserByRole("caretaker")
+            _caretakers.postValue(fetchedCaretakers)
         }
     }
+
+    fun getCurrentUser(userId: String) {
+        viewModelScope.launch {
+            val user = userRepository.getUserById(userId)
+            currentUser.value = user
+        }
+    }
+
+    var currentUser = mutableStateOf<User?>(null)
 }

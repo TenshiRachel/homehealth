@@ -23,20 +23,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
 
 @Composable
 fun IndexScreen(
     navController: NavHostController,
     userId: String,
-    authViewModel: AuthViewModel = viewModel()
+    indexViewModel: IndexViewModel = viewModel()
 ) {
     // Fetch current user
-    val user = authViewModel.currentUser.value
+    val user = indexViewModel.currentUser.value
 
     LaunchedEffect(userId) {
-        authViewModel.getCurrentUser(userId)
+        indexViewModel.getCurrentUser(userId)
     }
 
     // Role-based redirect
