@@ -7,3 +7,10 @@ data class User (
     val bio: String = "",
     val role: String = ""
 )
+
+data class EditProfileState(
+    val name: String = "",
+    val bio: String = "",
+    val isSaving: Boolean = false,
+    val error: String? = null
+)

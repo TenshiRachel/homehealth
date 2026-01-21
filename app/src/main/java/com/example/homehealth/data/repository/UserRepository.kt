@@ -19,4 +19,8 @@ class UserRepository(private val userDao: UserDao = UserDao()) {
     suspend fun getUserByRole(role: String): List<User> {
         return userDao.getUsersByRole(role)
     }
+
+    suspend fun updateUser(user: User): Boolean {
+        return userDao.updateUser(user)
+    }
 }
