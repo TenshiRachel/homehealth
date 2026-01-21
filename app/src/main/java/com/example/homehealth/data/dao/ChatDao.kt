@@ -1,6 +1,7 @@
 package com.example.homehealth.data.dao
 
 import com.example.homehealth.data.models.chat.Chat
+import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.models.chat.Message
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -10,31 +11,34 @@ class ChatDao {
     private val db = FirebaseFirestore.getInstance()
 
     suspend fun createOrGetChat(
-        user1Id: String,
-        user2Id: String
+        user1: ChatUser,
+        user2: ChatUser
     ): String {
-        val query = db.collection("chats")
-            .whereArrayContains("members", user1Id)
-            .get().await()
 
-        val existing = query.documents.firstOrNull {
-            val members = it.get("members") as List<*>
-            members.contains(user2Id)
+        val query = db.collection("chats")
+            .whereArrayContains("memberIds", user1.uid)
+            .get()
+            .await()
+
+        val existing = query.documents.firstOrNull { doc ->
+            val memberIds = doc.get("memberIds") as? List<*>
+            memberIds?.contains(user2.uid) == true
         }
 
-        if (existing != null){
+        if (existing != null) {
             return existing.id
         }
 
-        val newChat = db.collection("chats").document()
+        val newChatRef = db.collection("chats").document()
+
         val chat = Chat(
-            id = newChat.id,
-            members = listOf(user1Id, user2Id),
+            id = newChatRef.id,
+            members = listOf(user1, user2),
             lastMessageTime = System.currentTimeMillis()
         )
 
-        newChat.set(chat).await()
-        return newChat.id
+        newChatRef.set(chat).await()
+        return newChatRef.id
     }
 
     suspend fun sendMessage(chatId: String, message: Message){

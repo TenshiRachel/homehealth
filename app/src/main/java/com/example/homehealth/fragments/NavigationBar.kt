@@ -28,7 +28,11 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
                 unselectedTextColor = Color.Black,
                 indicatorColor = Color.Blue.copy(alpha = 0.5f)
             ),
-            onClick = { navController.navigate("index_screen/$userId") }
+            onClick = {
+                navController.navigate("index_screen/$userId") {
+                    launchSingleTop = true
+                }
+            }
         )
 
         NavigationBarItem(
@@ -42,7 +46,11 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
                 unselectedTextColor = Color.Black,
                 indicatorColor = Color.Blue.copy(alpha = 0.5f)
             ),
-            onClick = { navController.navigate("chatlist_screen/$userId") }
+            onClick = {
+                    navController.navigate("chatlist_screen/$userId"){
+                    launchSingleTop = true
+                }
+            }
         )
 
         if (role == "caretaker"){
@@ -57,7 +65,11 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
                     unselectedTextColor = Color.Black,
                     indicatorColor = Color.Blue.copy(alpha = 0.5f)
                 ),
-                onClick = { navController.navigate("requests_screen/$userId") }
+                onClick = {
+                    navController.navigate("requests_screen/$userId") {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
@@ -72,7 +84,11 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
                 unselectedTextColor = Color.Black,
                 indicatorColor = Color.Blue.copy(alpha = 0.5f)
             ),
-            onClick = { navController.navigate("profile_screen/$userId") }
+            onClick = {
+                navController.navigate("profile_screen/$userId") {
+                    launchSingleTop = true
+                }
+            }
         )
     }
 }
