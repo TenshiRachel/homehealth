@@ -1,7 +1,6 @@
 package com.example.homehealth.screens.chat
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -78,7 +77,7 @@ fun ChatListScreen(navController: NavHostController,
                     ChatListItem(
                         chat = chat,
                         currentUserId = userId,
-                        onClick = {  }
+                        onClick = { navController.navigate("chat_screen/$userId/${chat.id}") }
                     )
                 }
             }

@@ -10,22 +10,19 @@ class ChatRepository (private val chatDao: ChatDao = ChatDao()) {
         return chatDao.createOrGetChat(user1Id, user2Id)
     }
 
-    suspend fun sendMessage(
-        chatId: String,
-        senderId: String,
-        recipientId: String,
-        text: String
-    ) {
-        val message = Message(
-            chatId = chatId,
-            senderId = senderId,
-            recipientId = recipientId,
-            text = text
-        )
+    suspend fun sendMessage(chatId: String, message: Message) {
         chatDao.sendMessage(chatId, message)
+    }
+
+    suspend fun getChatById(chatId: String): Chat? {
+        return chatDao.getChatById(chatId)
     }
 
     suspend fun getUserChats(userId: String): List<Chat>{
         return chatDao.getUserChats(userId)
+    }
+
+    suspend fun getMessagesByChat(chatId: String): List<Message>{
+        return chatDao.getMessagesByChat(chatId)
     }
 }

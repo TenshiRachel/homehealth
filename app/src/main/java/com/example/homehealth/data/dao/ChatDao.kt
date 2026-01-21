@@ -1,5 +1,7 @@
 package com.example.homehealth.data.dao
 
+import android.util.Log
+import com.example.homehealth.data.models.User
 import com.example.homehealth.data.models.chat.Chat
 import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.models.chat.Message
@@ -9,13 +11,17 @@ import kotlinx.coroutines.tasks.await
 
 class ChatDao {
     private val db = FirebaseFirestore.getInstance()
+    companion object {
+        private const val CHATS_COLLECTION = "Chats"
+        private const val MESSAGES_COLLECTION = "Messages"
+    }
 
     suspend fun createOrGetChat(
         user1: ChatUser,
         user2: ChatUser
     ): String {
 
-        val query = db.collection("chats")
+        val query = db.collection(CHATS_COLLECTION)
             .whereArrayContains("memberIds", user1.uid)
             .get()
             .await()
@@ -29,10 +35,11 @@ class ChatDao {
             return existing.id
         }
 
-        val newChatRef = db.collection("chats").document()
+        val newChatRef = db.collection(CHATS_COLLECTION).document()
 
         val chat = Chat(
             id = newChatRef.id,
+            memberIds = listOf(user1.uid, user2.uid),
             members = listOf(user1, user2),
             lastMessageTime = System.currentTimeMillis()
         )
@@ -42,16 +49,16 @@ class ChatDao {
     }
 
     suspend fun sendMessage(chatId: String, message: Message){
-        val messageRef = db.collection("chats")
+        val messageRef = db.collection(CHATS_COLLECTION)
             .document(chatId)
-            .collection("messages")
+            .collection(MESSAGES_COLLECTION)
             .document()
 
         val messageWithId = message.copy(id = messageRef.id)
 
         messageRef.set(messageWithId).await()
 
-        db.collection("chats")
+        db.collection(CHATS_COLLECTION)
             .document(chatId)
             .update(
                 mapOf(
@@ -61,13 +68,41 @@ class ChatDao {
             ).await()
     }
 
+    suspend fun getChatById(chatId: String): Chat? {
+        return try {
+            val querySnapshot = db.collection(CHATS_COLLECTION)
+                .whereEqualTo("id", chatId)
+                .get()
+                .await()
+            querySnapshot.documents.firstOrNull()?.toObject(Chat::class.java)
+        } catch (e: Exception){
+            Log.d("Chat", "Retrieving chat by id failed", e)
+            null
+        }
+    }
+
     suspend fun getUserChats(userId: String): List<Chat> {
-        val snapshot = db.collection("chats")
+        val snapshot = db.collection(CHATS_COLLECTION)
             .whereArrayContains("members", userId)
             .orderBy("lastMessageTime", Query.Direction.DESCENDING)
             .get()
             .await()
 
         return snapshot.toObjects(Chat::class.java)
+    }
+
+    suspend fun getMessagesByChat(chatId: String): List<Message> {
+        return try {
+            val snapshot = db.collection(MESSAGES_COLLECTION)
+                .whereEqualTo("chatId", chatId)
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { document ->
+                document.toObject(Message::class.java)
+            }
+        } catch (e: Exception){
+            emptyList()
+        }
     }
 }

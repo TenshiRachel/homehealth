@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class ChatListViewModel: ViewModel() {
     private val chatRepository: ChatRepository = ChatRepository()
-    private val userRepository = UserRepository()
+    private val userRepository: UserRepository = UserRepository()
 
     private val _currentUser = MutableLiveData<User>()
     val currentUser: LiveData<User> = _currentUser

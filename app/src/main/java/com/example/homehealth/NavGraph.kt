@@ -10,6 +10,7 @@ import com.example.homehealth.screens.auth.LoginScreen
 import com.example.homehealth.screens.appointment.ScheduleScreen
 import com.example.homehealth.screens.auth.RegisterScreen
 import com.example.homehealth.screens.chat.ChatListScreen
+import com.example.homehealth.screens.chat.ChatScreen
 
 
 @Composable
@@ -38,6 +39,12 @@ fun NavGraph(
             composable("chatlist_screen/{userId}") { backStackEntry ->
                 val userId = backStackEntry.arguments?.getString("userId")!!
                 ChatListScreen(navController, userId)
+            }
+
+            composable("chat_screen/{userId}/{chatId}") { backStackEntry ->
+                val userId = backStackEntry.arguments?.getString("userId")!!
+                val chatId = backStackEntry.arguments?.getString("chatId")!!
+                ChatScreen(navController, userId, chatId)
             }
         }
 
