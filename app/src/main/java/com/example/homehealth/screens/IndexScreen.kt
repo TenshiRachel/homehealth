@@ -93,7 +93,7 @@ fun IndexScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
-                        onClick = { navController.navigate("search_appointments") }
+                        onClick = { navController.navigate("schedule_screen/${userId}") }
                     ) {
                         Text("Search Appointments")
                     }

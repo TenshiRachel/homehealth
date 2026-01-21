@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.example.homehealth.screens.IndexScreen
 import com.example.homehealth.screens.auth.LoginScreen
+import com.example.homehealth.screens.appointment.ScheduleScreen
 import com.example.homehealth.screens.auth.RegisterScreen
 import com.example.homehealth.screens.chat.ChatListScreen
 
@@ -28,8 +29,9 @@ fun NavGraph(
         }
 
         // 🔵 Caregiver landing
-        composable("schedule_screen") {
-            ScheduleScreen(navController)
+        composable("schedule_screen/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")!!
+            ScheduleScreen(navController, userId)
         }
 
         navigation(startDestination = "chatlist_screen/{userId}", route = "chat_graph"){
@@ -44,10 +46,4 @@ fun NavGraph(
 //            IndexScreen(navController, userId)
 //        }
     }
-}
-
-@Composable
-fun ScheduleScreen(x0: NavHostController) {
-    TODO("Not yet implemented")
-    // Why this here haha shd be under screens/ScheduleScreen
 }
