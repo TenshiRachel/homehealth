@@ -11,6 +11,7 @@ import com.example.homehealth.screens.appointment.ScheduleScreen
 import com.example.homehealth.screens.auth.RegisterScreen
 import com.example.homehealth.screens.chat.ChatListScreen
 import com.example.homehealth.screens.chat.ChatScreen
+import com.example.homehealth.screens.profile.ProfileScreen
 
 
 @Composable
@@ -27,6 +28,17 @@ fun NavGraph(
         composable("index_screen/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId")!!
             IndexScreen(navController, userId)
+        }
+
+        // Profile Screen
+        composable("profile_screen/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")!!
+            ProfileScreen(navController, userId)
+        }
+
+        composable("edit_profile_screen/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")!!
+            com.example.homehealth.screens.profile.EditProfileScreen(navController, userId)
         }
 
         // 🔵 Caregiver landing
