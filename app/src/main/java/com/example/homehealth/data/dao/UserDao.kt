@@ -3,6 +3,7 @@ package com.example.homehealth.data.dao
 import android.util.Log
 import com.example.homehealth.data.models.User
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 class UserDao {
     private val db = FirebaseFirestore.getInstance()
@@ -60,6 +61,19 @@ class UserDao {
             }
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    suspend fun updateUser(user: User): Boolean {
+        return try {
+            db.collection(USERS_COLLECTION)
+                .document(user.uid) // userId comes from model
+                .set(user, SetOptions.merge())
+                .await()
+            true
+        } catch (e: Exception) {
+            Log.e("UserDao", "Failed to update user", e)
+            false
         }
     }
 }
