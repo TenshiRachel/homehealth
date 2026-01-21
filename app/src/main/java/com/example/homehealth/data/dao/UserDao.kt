@@ -4,14 +4,16 @@ import android.util.Log
 import com.example.homehealth.data.models.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-
 class UserDao {
     private val db = FirebaseFirestore.getInstance()
 
+    companion object {
+        private const val USERS_COLLECTION = "Users"
+    }
     suspend fun createUser(user: User): Boolean {
         return try {
             Log.d("UserDao", "Starting createUser for: ${user.email}, UID: ${user.uid}")
-            db.collection("users")
+            db.collection(USERS_COLLECTION)
                 .document(user.uid)
                 .set(user)
                 .await()
@@ -25,7 +27,7 @@ class UserDao {
 
     suspend fun getUserById(userId: String): User? {
         return try {
-            val doc = db.collection("users").document(userId).get().await()
+            val doc = db.collection(USERS_COLLECTION).document(userId).get().await()
             val user = doc.toObject(User::class.java)
             user
         } catch (e: Exception){
@@ -36,7 +38,7 @@ class UserDao {
 
     suspend fun getUserByEmail(email: String): User? {
         return try {
-            val querySnapshot = db.collection("users")
+            val querySnapshot = db.collection(USERS_COLLECTION)
                 .whereEqualTo("email", email)
                 .get()
                 .await()
@@ -48,7 +50,7 @@ class UserDao {
 
     suspend fun getUsersByRole(role: String): List<User> {
         return try {
-            val querySnapshot = db.collection("users")
+            val querySnapshot = db.collection(USERS_COLLECTION)
                 .whereEqualTo("role", role)
                 .get()
                 .await()
