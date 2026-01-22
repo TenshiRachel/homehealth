@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
 import androidx.navigation.navigation
 import com.example.homehealth.screens.IndexScreen
 import com.example.homehealth.screens.auth.LoginScreen
@@ -18,6 +17,8 @@ import androidx.compose.runtime.remember
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.screens.admin.adminGraph
 import com.example.homehealth.screens.profile.EditProfileScreen
+import com.example.homehealth.viewmodels.IndexViewModel
+import com.example.homehealth.viewmodels.ProfileViewModel
 
 
 @Composable
@@ -28,10 +29,7 @@ fun NavGraph(
         navController = navController,
         startDestination = "auth_graph"
     ){
-        navigation(
-            startDestination = "login_screen",
-            route = "auth_graph"
-        ){
+        navigation(startDestination = "login_screen", route = "auth_graph") {
             composable("register_screen"){
                 RegisterScreen(navController)
             }
@@ -47,20 +45,35 @@ fun NavGraph(
         }
 
         // Public (Patient) landing
-        composable("index_screen/{userId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")!!
-            IndexScreen(navController, userId)
+        composable("index_screen") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+            val indexViewModel: IndexViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+
+            IndexScreen(navController, indexViewModel, authViewModel)
         }
 
         // Profile Screen
-        composable("profile_screen/{userId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")!!
-            ProfileScreen(navController, userId)
+        composable("profile_screen") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+            val profileViewModel: ProfileViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+
+            ProfileScreen(navController, profileViewModel, authViewModel)
         }
 
-        composable("edit_profile_screen/{userId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")!!
-            EditProfileScreen(navController, userId)
+        composable("edit_profile_screen") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+            val profileViewModel: ProfileViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+
+            EditProfileScreen(navController, profileViewModel, authViewModel)
         }
 
         // 🔵 Caregiver landing

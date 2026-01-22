@@ -1,7 +1,6 @@
 package com.example.homehealth.screens.profile
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.draw.clip
@@ -23,14 +22,16 @@ import com.example.homehealth.viewmodels.ProfileViewModel
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    userId: String,
     profileViewModel: ProfileViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
     val user by profileViewModel.profileUser
+    val sessionUser = authViewModel.currentUser.value
 
-    LaunchedEffect(userId) {
-        profileViewModel.loadProfile(userId)
+    LaunchedEffect(sessionUser) {
+        sessionUser?.uid?.let { userId ->
+            profileViewModel.loadProfile(userId)
+        }
     }
 
     user?.let { profile ->
@@ -89,7 +90,7 @@ fun ProfileScreen(
             Button(onClick = {
                 Log.d("ProfileScreen", "Edit Profile button clicked")
                 // Navigate to EditProfileScreen
-                navController.navigate("edit_profile_screen/${profile.uid}")
+                navController.navigate("edit_profile_screen")
             },
                 modifier = Modifier.fillMaxWidth()
             ) {

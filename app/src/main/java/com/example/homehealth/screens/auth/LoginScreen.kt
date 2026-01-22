@@ -65,7 +65,7 @@ fun LoginScreen(
                 if (success && user != null) {
                     when (user.role){
                         "public" -> {
-                            navController.navigate("index_screen/${user.uid}"){
+                            navController.navigate("index_screen"){
                                 Log.d("Login", "Success, User ID: $message")
                                 popUpTo("login_screen") {inclusive}
                             }
