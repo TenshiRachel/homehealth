@@ -20,7 +20,7 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             label = { Text("Home") },
-            selected = navController.currentDestination?.route == "index_screen/$userId",
+            selected = navController.currentDestination?.route == "index_screen",
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color.White,
                 selectedTextColor = Color.Blue.copy(alpha = 0.5f),
@@ -29,7 +29,7 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
                 indicatorColor = Color.Blue.copy(alpha = 0.5f)
             ),
             onClick = {
-                navController.navigate("index_screen/$userId") {
+                navController.navigate("index_screen") {
                     launchSingleTop = true
                 }
             }
@@ -76,7 +76,7 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
         NavigationBarItem(
             icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
             label = { Text("Profile") },
-            selected = navController.currentDestination?.route == "profile_screen/$userId",
+            selected = navController.currentDestination?.route == "profile_screen",
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color.White,
                 selectedTextColor = Color.Blue.copy(alpha = 0.5f),
@@ -85,7 +85,7 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
                 indicatorColor = Color.Blue.copy(alpha = 0.5f)
             ),
             onClick = {
-                navController.navigate("profile_screen/$userId") {
+                navController.navigate("profile_screen") {
                     launchSingleTop = true
                 }
             }
