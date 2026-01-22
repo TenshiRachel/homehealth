@@ -26,6 +26,21 @@ class UserDao {
         }
     }
 
+    suspend fun getAllUsers(): List<User> {
+        return try {
+            val querySnapshot = db.collection(USERS_COLLECTION)
+                .get()
+                .await()
+
+            querySnapshot.documents.mapNotNull { document ->
+                document.toObject(User::class.java)
+            }
+        } catch (e: Exception) {
+            Log.e("UserDao", "Failed to retrieve all users", e)
+            emptyList()
+        }
+    }
+
     suspend fun getUserById(userId: String): User? {
         return try {
             val doc = db.collection(USERS_COLLECTION).document(userId).get().await()

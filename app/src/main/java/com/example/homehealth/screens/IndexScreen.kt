@@ -1,5 +1,6 @@
 package com.example.homehealth.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,10 +41,27 @@ fun IndexScreen(
     }
 
     // Role-based redirect
-    LaunchedEffect(user?.role) {
-        if (user?.role == "caregiver") {
-            navController.navigate("schedule_screen") {
-                popUpTo("index_screen") { inclusive = true }
+    LaunchedEffect(user) {
+        if (user == null) return@LaunchedEffect
+
+        when (user.role) {
+            "public" -> Unit
+
+            "caregiver" -> {
+                navController.navigate("schedule_screen/${user.uid}") {
+                    popUpTo("index_screen") { inclusive = true }
+                }
+            }
+
+            "admin" -> {
+                navController.navigate("admin_graph") {
+                    popUpTo("index_screen") { inclusive = true }
+                }
+            }
+
+            else -> {
+                Log.w("RoleRedirect", "Role not ready yet: ${user.role}")
+                // DO NOTHING — wait for state to settle
             }
         }
     }

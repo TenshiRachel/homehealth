@@ -17,13 +17,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
     userId: String,
-    profileViewModel: ProfileViewModel = viewModel()
+    profileViewModel: ProfileViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val user by profileViewModel.profileUser
 
@@ -92,6 +94,25 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Edit Profile")
+            }
+
+            // Logout Button
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    Log.d("ProfileScreen", "Logout button clicked")
+
+                    authViewModel.logout()
+
+                    navController.navigate("login_screen") {
+                        popUpTo("auth_graph") {
+                            inclusive = true
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Logout")
             }
         }
     } ?: run {

@@ -8,6 +8,10 @@ class UserRepository(private val userDao: UserDao = UserDao()) {
         return userDao.createUser(user)
     }
 
+    suspend fun getAllUsers(): List<User> {
+        return userDao.getAllUsers()
+    }
+
     suspend fun getUserById(userId: String): User? {
         return userDao.getUserById(userId)
     }

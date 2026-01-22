@@ -26,11 +26,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.homehealth.viewmodels.AuthViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun LoginScreen(navController: NavHostController){
+fun LoginScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel = viewModel()
+){
     val context = LocalContext.current
-    val authViewModel = AuthViewModel()
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -70,6 +73,12 @@ fun LoginScreen(navController: NavHostController){
                         "caregiver" -> {
                             Log.d("Login", "Success, User ID: $message")
                             navController.navigate("caregiver_home/${user.uid}")
+                        }
+                        "admin" -> {
+                            Log.d("Login", "Success, User ID: $message")
+                            navController.navigate("admin_graph"){
+                                popUpTo("login_screen") {inclusive}
+                            }
                         }
                         else -> {
                             authViewModel.logout()

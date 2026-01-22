@@ -1,6 +1,7 @@
 package com.example.homehealth.viewmodels
 
 import android.util.Log
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,6 +17,9 @@ import kotlinx.coroutines.tasks.await
 class AuthViewModel: ViewModel() {
     private val userRepository = UserRepository()
     val auth = FirebaseAuth.getInstance()
+
+    private val _currentUser = mutableStateOf<User?>(null)
+    val currentUser: State<User?> = _currentUser
 
     private fun validatePassword(password: String, confirm: String): String? {
         // Check if password is at least 6 characters long
@@ -75,7 +79,7 @@ class AuthViewModel: ViewModel() {
                     val user = userRepository.getUserByEmail(email)
 
                     if (user != null) {
-                        // Return success and user id to the callback
+                        _currentUser.value = user
                         onResult(true, user.uid, user)
                     } else {
                         // If no user found, return failure
