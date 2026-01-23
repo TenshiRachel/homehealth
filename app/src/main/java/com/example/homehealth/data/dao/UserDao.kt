@@ -42,6 +42,7 @@ class UserDao {
     }
 
     suspend fun getUserById(userId: String): User? {
+        if (userId.isEmpty()) return null // prevent invalid Firestore path
         return try {
             val doc = db.collection(USERS_COLLECTION).document(userId).get().await()
             val user = doc.toObject(User::class.java)

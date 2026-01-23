@@ -1,5 +1,6 @@
 package com.example.homehealth.viewmodels
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -28,7 +29,12 @@ class ScheduleViewModel : ViewModel() {
     fun fetchCurrentUser(userId: String) {
         viewModelScope.launch {
             val user = userRepository.getUserById(userId)
-            _currentUser.postValue(user)
+            if (user == null){
+                Log.e("ScheduleViewModel", "No user found for id $userId")
+            }
+            else {
+                _currentUser.postValue(user)
+            }
         }
     }
 

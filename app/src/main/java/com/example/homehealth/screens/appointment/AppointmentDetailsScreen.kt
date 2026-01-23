@@ -24,43 +24,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.homehealth.data.models.User
 import com.example.homehealth.fragments.BottomNavBar
-import com.example.homehealth.viewmodels.AuthViewModel
-import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ScheduleViewModel
 
 @Composable
 fun AppointmentDetailsScreen(
     navController: NavHostController,
     appointmentId: String,
-    authViewModel: AuthViewModel = viewModel(),
+    userId: String,
     scheduleViewModel: ScheduleViewModel = viewModel()
 ) {
-    val user by scheduleViewModel.currentUser.observeAsState()
+    val currentUser = scheduleViewModel.currentUser.observeAsState(null)
+    val appointment = scheduleViewModel.currentAppointment.value
 
-    LaunchedEffect(appointmentId) {
+    // Fetch appointment details and current user
+    LaunchedEffect(appointmentId, userId) {
+        scheduleViewModel.fetchCurrentUser(userId)
         scheduleViewModel.fetchAppointmentDetails(appointmentId)
     }
-
-//    val caretakers by scheduleViewModel.caretakers.observeAsState(emptyList())
-
-//    LaunchedEffect(userId) {
-//        scheduleViewModel.fetchCurrentUser(userId)
-//    }
-
-//    // auth guard
-//    if (user == null) {
-//        Text("Not authenticated")
-//        return
-//    }
 
     Scaffold(
         bottomBar = {
             BottomNavBar(
                 navController,
-                user!!.uid,
-                user!!.role
+                currentUser.value?.uid ?: "",
+                currentUser.value?.role ?: "public"
             )
         }
     ) { paddingValues ->
@@ -71,11 +59,20 @@ fun AppointmentDetailsScreen(
                 .padding(20.dp)
         ) {
             Text(
-                text = "Appointment Details Screen for $appointmentId - TBD",
+                text = "Appointment Details",
                 style = MaterialTheme.typography.headlineMedium
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Appointment with: ${appointment?.caretakerName}")
+            Text("Appointment Name: ${appointment?.name}")
+            Text("Caretaker ID: ${appointment?.caretakerUid}")
+            Text("Appointment Description: ${appointment?.description}")
+            Text("Booking Date & Time: ${appointment?.bookingDateTime}")
+            Text("Appointment Date & Time: ${appointment?.apptDateTime}")
+            Text("Location: ${appointment?.location}")
+            Text("Status: ${appointment?.status}")
         }
     }
 }

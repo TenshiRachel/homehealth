@@ -131,6 +131,7 @@ fun IndexScreen(
                     }
                 } else {
                     AppointmentList(
+                        userId = user.uid,
                         appointments = appointments,
                         navController = navController,
                         modifier = Modifier.weight(1f)
@@ -151,6 +152,7 @@ fun IndexScreen(
 
 @Composable
 fun AppointmentList(
+    userId: String,
     appointments: List<Appointment>,
     navController: NavHostController,
     modifier: Modifier = Modifier
@@ -169,7 +171,7 @@ fun AppointmentList(
                 onClick = {
                     Log.d("appointmentID", appointment.id)
                     navController.navigate(
-                        "appointment_details_screen/${appointment.id}"
+                        "appointment_details_screen/${appointment.id}/${userId}"
                     )
                 }
             )

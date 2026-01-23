@@ -84,9 +84,10 @@ fun NavGraph(
             BrowseCaretakerScreen(navController, userId)
         }
 
-        composable("appointment_details_screen/{appointmentId}") { backStackEntry ->
+        composable("appointment_details_screen/{appointmentId}/{userId}") { backStackEntry ->
             val appointmentId = backStackEntry.arguments?.getString("appointmentId")!!
-            AppointmentDetailsScreen(navController, appointmentId)
+            val userId = backStackEntry.arguments?.getString("userId")!!
+            AppointmentDetailsScreen(navController, appointmentId, userId)
         }
 
         // Scheduling made by patient/public

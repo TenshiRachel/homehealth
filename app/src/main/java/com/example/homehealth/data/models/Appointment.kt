@@ -4,6 +4,7 @@ data class Appointment (
     val id: String = "",
     val patientUid: String = "",
     val caretakerUid: String = "",
+    val caretakerName: String = "",
     val name: String = "",
     val description: String = "",
     val bookingDateTime: String = "",
