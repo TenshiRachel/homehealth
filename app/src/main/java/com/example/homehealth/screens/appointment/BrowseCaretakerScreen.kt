@@ -31,15 +31,14 @@ import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ScheduleViewModel
 
 @Composable
-fun ScheduleScreen(
+fun BrowseCaretakerScreen(
     navController: NavHostController,
     userId: String,
-    caretakerId: String,
     authViewModel: AuthViewModel = viewModel(),
     scheduleViewModel: ScheduleViewModel = viewModel()
 ) {
     val user by scheduleViewModel.currentUser.observeAsState()
-//    val caretakers by scheduleViewModel.caretakers.observeAsState(emptyList())
+    val caretakers by scheduleViewModel.caretakers.observeAsState(emptyList())
 
     LaunchedEffect(userId) {
         scheduleViewModel.fetchCurrentUser(userId)
@@ -72,11 +71,38 @@ fun ScheduleScreen(
                 .padding(20.dp)
         ) {
             Text(
-                text = "Scheduling Screen TBD",
+                text = "Available Caretakers",
                 style = MaterialTheme.typography.headlineMedium
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (caretakers.isEmpty()) {
+                Text("No caretakers available at the moment.")
+            } else {
+                caretakers.forEach { caretaker ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = caretaker.name,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
+                        Button(
+                            onClick = {
+                                navController.navigate(
+                                    "schedule_screen/${user!!.uid}/${caretaker.uid}"
+                                )
+                            }
+                        ) {
+                            Text("Book Appointment")
+                        }
+                    }
+                }
+            }
         }
     }
 }

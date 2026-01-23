@@ -16,6 +16,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.screens.admin.adminGraph
+import com.example.homehealth.screens.appointment.AppointmentDetailsScreen
+import com.example.homehealth.screens.appointment.BrowseCaretakerScreen
 import com.example.homehealth.screens.profile.EditProfileScreen
 import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
@@ -76,10 +78,22 @@ fun NavGraph(
             EditProfileScreen(navController, profileViewModel, authViewModel)
         }
 
-        // 🔵 Caregiver landing
-        composable("schedule_screen/{userId}") { backStackEntry ->
+        // Browsing made by patient/public
+        composable("browse_caretaker_screen/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId")!!
-            ScheduleScreen(navController, userId)
+            BrowseCaretakerScreen(navController, userId)
+        }
+
+        composable("appointment_details_screen/{appointmentId}") { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getString("appointmentId")!!
+            AppointmentDetailsScreen(navController, appointmentId)
+        }
+
+        // Scheduling made by patient/public
+        composable("schedule_screen/{userId}/{caretakerId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")!!
+            val caretakerId = backStackEntry.arguments?.getString("caretakerId")!!
+            ScheduleScreen(navController, userId, caretakerId)
         }
 
         // Chat
@@ -96,7 +110,7 @@ fun NavGraph(
             }
         }
 
-        // 🔴 ADMIN GRAPH
+        // ADMIN GRAPH
         adminGraph(navController)
     }
 }

@@ -20,7 +20,7 @@ class UserRepository(private val userDao: UserDao = UserDao()) {
         return userDao.getUserByEmail(email)
     }
 
-    suspend fun getUserByRole(role: String): List<User> {
+    suspend fun getUsersByRole(role: String): List<User> {
         return userDao.getUsersByRole(role)
     }
 

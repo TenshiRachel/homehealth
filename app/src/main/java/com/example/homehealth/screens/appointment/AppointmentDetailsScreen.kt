@@ -31,30 +31,29 @@ import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ScheduleViewModel
 
 @Composable
-fun ScheduleScreen(
+fun AppointmentDetailsScreen(
     navController: NavHostController,
-    userId: String,
-    caretakerId: String,
+    appointmentId: String,
     authViewModel: AuthViewModel = viewModel(),
     scheduleViewModel: ScheduleViewModel = viewModel()
 ) {
     val user by scheduleViewModel.currentUser.observeAsState()
+
+    LaunchedEffect(appointmentId) {
+        scheduleViewModel.fetchAppointmentDetails(appointmentId)
+    }
+
 //    val caretakers by scheduleViewModel.caretakers.observeAsState(emptyList())
 
-    LaunchedEffect(userId) {
-        scheduleViewModel.fetchCurrentUser(userId)
-    }
+//    LaunchedEffect(userId) {
+//        scheduleViewModel.fetchCurrentUser(userId)
+//    }
 
-    // auth guard
-    if (user == null) {
-        Text("Not authenticated")
-        return
-    }
-
-    // Fetch caretakers once
-    LaunchedEffect(Unit) {
-        scheduleViewModel.fetchAvailableCaretakers()
-    }
+//    // auth guard
+//    if (user == null) {
+//        Text("Not authenticated")
+//        return
+//    }
 
     Scaffold(
         bottomBar = {
@@ -72,7 +71,7 @@ fun ScheduleScreen(
                 .padding(20.dp)
         ) {
             Text(
-                text = "Scheduling Screen TBD",
+                text = "Appointment Details Screen for $appointmentId - TBD",
                 style = MaterialTheme.typography.headlineMedium
             )
 

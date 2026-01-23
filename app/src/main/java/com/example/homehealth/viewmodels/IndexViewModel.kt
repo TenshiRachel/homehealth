@@ -1,34 +1,35 @@
 package com.example.homehealth.viewmodels
 
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.homehealth.data.models.Appointment
 import com.example.homehealth.data.models.User
+import com.example.homehealth.data.repository.AppointmentRepository
 import com.example.homehealth.data.repository.UserRepository
 import kotlinx.coroutines.launch
 
 class IndexViewModel : ViewModel() {
+
     private val userRepository = UserRepository()
+    private val appointmentRepository = AppointmentRepository()
 
-    private val _caretakers = MutableLiveData<List<User>>()
-    val caretakers: LiveData<List<User>> = _caretakers
+    var currentUser = mutableStateOf<User?>(null)
+        private set
 
-    // for populating screen with available caretakers
-    fun fetchCaretakersByRole(){
-        viewModelScope.launch {
-            val fetchedCaretakers = userRepository.getUserByRole("caretaker")
-            _caretakers.postValue(fetchedCaretakers)
-        }
-    }
+    var appointments = mutableStateOf<List<Appointment>>(emptyList())
+        private set
 
     fun getCurrentUser(userId: String) {
         viewModelScope.launch {
-            val user = userRepository.getUserById(userId)
-            currentUser.value = user
+            currentUser.value = userRepository.getUserById(userId)
         }
     }
 
-    var currentUser = mutableStateOf<User?>(null)
+    fun fetchAppointments(patientUid: String) {
+        viewModelScope.launch {
+            appointments.value =
+                appointmentRepository.getAppointmentsByPatient(patientUid)
+        }
+    }
 }

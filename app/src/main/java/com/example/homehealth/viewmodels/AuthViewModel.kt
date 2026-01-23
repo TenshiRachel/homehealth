@@ -155,6 +155,7 @@ class AuthViewModel: ViewModel() {
     }
 
     fun logout(){
+        _currentUser.value = null
         auth.signOut()
     }
 }
