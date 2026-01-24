@@ -48,9 +48,10 @@ fun AppointmentList(
                         currentUserId = sessionUser.uid,
                         userName1 = sessionUser.name,
                         userId2 = appointment.caretakerUid,
-                        userName2 = appointment.caretakerName
+                        userName2 = appointment.caretakerName,
                     )
                 },
+                userRole = sessionUser.role
             )
         }
     }

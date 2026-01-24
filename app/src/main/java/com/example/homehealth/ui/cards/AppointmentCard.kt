@@ -29,6 +29,7 @@ fun AppointmentCard(
     appointment: Appointment,
     onViewDetails: () -> Unit,
     onChat: () -> Unit,
+    userRole: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -77,7 +78,7 @@ fun AppointmentCard(
                         contentDescription = "Chat"
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Chat with Caretaker")
+                    Text("Chat with ${if (userRole == "public") "caretaker" else "patient"}")
                 }
             }
         }
