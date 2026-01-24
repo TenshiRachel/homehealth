@@ -41,27 +41,28 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.homehealth.data.models.chat.Message
 import com.example.homehealth.utils.formatTimestamp
+import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ChatViewModel
 
 @Composable
 fun ChatScreen(navController: NavHostController,
-               userId: String,
                chatId: String,
-               chatViewmodel: ChatViewModel = viewModel()
+               chatViewmodel: ChatViewModel = viewModel(),
+               authViewModel: AuthViewModel = viewModel()
 ){
-    val currentUser by chatViewmodel.currentUser.observeAsState(null)
     val chat by chatViewmodel.chat.observeAsState(null)
     val messages by chatViewmodel.messages.observeAsState(emptyList())
 
+    val sessionUser = authViewModel.currentUser.value
+
     var messageText by remember { mutableStateOf("") }
 
-    LaunchedEffect(userId, chatId) {
-        chatViewmodel.fetchCurrentUser(userId)
+    LaunchedEffect(chatId) {
         chatViewmodel.fetchChat(chatId)
         chatViewmodel.fetchMessages(chatId)
     }
 
-    if (currentUser == null || chat == null) {
+    if (sessionUser == null || chat == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -71,7 +72,7 @@ fun ChatScreen(navController: NavHostController,
         return
     }
 
-    val otherUser = chat!!.members.first { it.uid != currentUser!!.uid }
+    val otherUser = chat!!.members.first { it.uid != sessionUser.uid }
 
     Scaffold(
         topBar = {
@@ -88,7 +89,7 @@ fun ChatScreen(navController: NavHostController,
                     if (messageText.isNotBlank()) {
                         chatViewmodel.sendMessage(
                             chatId = chatId,
-                            senderId = currentUser!!.uid,
+                            senderId = sessionUser.uid,
                             recipientId = otherUser.uid,
                             text = messageText
                         )
@@ -107,7 +108,7 @@ fun ChatScreen(navController: NavHostController,
             items(messages.reversed()) { message ->
                 ChatBubble(
                     message = message,
-                    isOwnMessage = message.senderId == currentUser!!.uid
+                    isOwnMessage = message.senderId == sessionUser.uid
                 )
             }
         }

@@ -38,7 +38,7 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
         NavigationBarItem(
             icon = { Icon(Icons.Default.ChatBubble, contentDescription = "Chats") },
             label = { Text("Chats") },
-            selected = navController.currentDestination?.route == "chatlist_screen/$userId",
+            selected = navController.currentDestination?.route == "chatlist_screen",
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color.White,
                 selectedTextColor = Color.Blue.copy(alpha = 0.5f),
@@ -47,7 +47,7 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
                 indicatorColor = Color.Blue.copy(alpha = 0.5f)
             ),
             onClick = {
-                    navController.navigate("chatlist_screen/$userId"){
+                    navController.navigate("chatlist_screen"){
                     launchSingleTop = true
                 }
             }

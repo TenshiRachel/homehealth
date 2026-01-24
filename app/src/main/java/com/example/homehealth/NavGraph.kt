@@ -19,6 +19,8 @@ import com.example.homehealth.screens.admin.adminGraph
 import com.example.homehealth.screens.appointment.AppointmentDetailsScreen
 import com.example.homehealth.screens.appointment.BrowseCaretakerScreen
 import com.example.homehealth.screens.profile.EditProfileScreen
+import com.example.homehealth.viewmodels.ChatListViewModel
+import com.example.homehealth.viewmodels.ChatViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
 
@@ -98,16 +100,24 @@ fun NavGraph(
         }
 
         // Chat
-        navigation(startDestination = "chatlist_screen/{userId}", route = "chat_graph"){
-            composable("chatlist_screen/{userId}") { backStackEntry ->
-                val userId = backStackEntry.arguments?.getString("userId")!!
-                ChatListScreen(navController, userId)
+        navigation(startDestination = "chatlist_screen", route = "chat_graph"){
+            composable("chatlist_screen") { backStackEntry ->
+                val rootEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(navController.graph.id)
+                }
+                val chatListViewModel: ChatListViewModel = viewModel(rootEntry)
+                val authViewModel: AuthViewModel = viewModel(rootEntry)
+                ChatListScreen(navController, chatListViewModel, authViewModel)
             }
 
-            composable("chat_screen/{userId}/{chatId}") { backStackEntry ->
-                val userId = backStackEntry.arguments?.getString("userId")!!
+            composable("chat_screen/{chatId}") { backStackEntry ->
                 val chatId = backStackEntry.arguments?.getString("chatId")!!
-                ChatScreen(navController, userId, chatId)
+                val rootEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(navController.graph.id)
+                }
+                val chatViewModel: ChatViewModel = viewModel(rootEntry)
+                val authViewModel: AuthViewModel = viewModel(rootEntry)
+                ChatScreen(navController, chatId, chatViewModel, authViewModel)
             }
         }
 

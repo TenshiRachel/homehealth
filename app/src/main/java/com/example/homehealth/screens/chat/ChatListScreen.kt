@@ -1,5 +1,6 @@
 package com.example.homehealth.screens.chat
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,22 +37,25 @@ import androidx.navigation.NavHostController
 import com.example.homehealth.data.models.chat.Chat
 import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.utils.formatTimestamp
+import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ChatListViewModel
 
 @Composable
 fun ChatListScreen(navController: NavHostController,
-                   userId: String,
-                   chatListViewModel: ChatListViewModel = viewModel()
+                   chatListViewModel: ChatListViewModel = viewModel(),
+                   authViewModel: AuthViewModel = viewModel()
 ){
-    val currentUser by chatListViewModel.currentUser.observeAsState(null)
     val userChats by chatListViewModel.chats.observeAsState(emptyList())
 
-    LaunchedEffect(userId) {
-        chatListViewModel.fetchCurrentUser(userId)
-        chatListViewModel.fetchUserChats(userId)
+    val sessionUser = authViewModel.currentUser.value
+
+    LaunchedEffect(sessionUser) {
+        sessionUser?.uid?.let { userId ->
+            chatListViewModel.fetchUserChats(userId)
+        }
     }
 
-    if (currentUser == null) {
+    if (sessionUser == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -62,7 +66,7 @@ fun ChatListScreen(navController: NavHostController,
     }
 
     Scaffold (
-        bottomBar = { BottomNavBar(navController, userId, currentUser!!.role) }
+        bottomBar = { BottomNavBar(navController, sessionUser.uid, sessionUser.role) }
     ) { paddingValues ->
         if (userChats.isEmpty()){
             EmptyChat(Modifier.padding(paddingValues))
@@ -76,8 +80,8 @@ fun ChatListScreen(navController: NavHostController,
                 items(userChats){ chat ->
                     ChatListItem(
                         chat = chat,
-                        currentUserId = userId,
-                        onClick = { navController.navigate("chat_screen/$userId/${chat.id}") }
+                        currentUserId = sessionUser.uid,
+                        onClick = { navController.navigate("chat_screen/${chat.id}") }
                     )
                 }
             }
