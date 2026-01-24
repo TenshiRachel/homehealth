@@ -1,45 +1,41 @@
 package com.example.homehealth.screens.appointment
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.homehealth.fragments.BottomNavBar
+import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ScheduleViewModel
 
 @Composable
 fun AppointmentDetailsScreen(
     navController: NavHostController,
     appointmentId: String,
-    userId: String,
+    authViewModel: AuthViewModel = viewModel(),
     scheduleViewModel: ScheduleViewModel = viewModel()
 ) {
-    val currentUser = scheduleViewModel.currentUser.observeAsState(null)
+    val sessionUser = authViewModel.currentUser.value
     val appointment = scheduleViewModel.currentAppointment.value
 
+    // auth guard
+    if (sessionUser == null) {
+        Text("Not authenticated")
+        return
+    }
+
     // Fetch appointment details and current user
-    LaunchedEffect(appointmentId, userId) {
-        scheduleViewModel.fetchCurrentUser(userId)
+    LaunchedEffect(appointmentId) {
         scheduleViewModel.fetchAppointmentDetails(appointmentId)
     }
 
@@ -47,8 +43,8 @@ fun AppointmentDetailsScreen(
         bottomBar = {
             BottomNavBar(
                 navController,
-                currentUser.value?.uid ?: "",
-                currentUser.value?.role ?: "public"
+                sessionUser.uid,
+                sessionUser.role
             )
         }
     ) { paddingValues ->

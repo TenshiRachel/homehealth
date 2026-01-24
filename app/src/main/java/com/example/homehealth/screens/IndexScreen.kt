@@ -125,13 +125,12 @@ fun IndexScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
-                        onClick = { navController.navigate("browse_caretaker_screen/${user.uid}") }
+                        onClick = { navController.navigate("browse_caretaker_screen") }
                     ) {
                         Text("Search Appointments")
                     }
                 } else {
                     AppointmentList(
-                        userId = user.uid,
                         appointments = appointments,
                         navController = navController,
                         modifier = Modifier.weight(1f)
@@ -140,7 +139,7 @@ fun IndexScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
-                        onClick = { navController.navigate("browse_caretaker_screen/${user.uid}") }
+                        onClick = { navController.navigate("browse_caretaker_screen") }
                     ) {
                         Text("Search for more appointments")
                     }
@@ -152,7 +151,6 @@ fun IndexScreen(
 
 @Composable
 fun AppointmentList(
-    userId: String,
     appointments: List<Appointment>,
     navController: NavHostController,
     modifier: Modifier = Modifier
@@ -171,7 +169,7 @@ fun AppointmentList(
                 onClick = {
                     Log.d("appointmentID", appointment.id)
                     navController.navigate(
-                        "appointment_details_screen/${appointment.id}/${userId}"
+                        "appointment_details_screen/${appointment.id}"
                     )
                 }
             )
@@ -182,8 +180,9 @@ fun AppointmentList(
 @Composable
 fun AppointmentStatusChip(status: String) {
     val color = when (status.lowercase()) {
+        "requested" -> MaterialTheme.colorScheme.outline
         "booked" -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.outline
+        else -> MaterialTheme.colorScheme.inversePrimary
     }
 
     AssistChip(

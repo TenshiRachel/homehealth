@@ -16,13 +16,12 @@ class AppointmentDao {
 
     suspend fun createAppointment(appointment: Appointment): Boolean {
         return try {
-            Log.d("AppointmentDao", "Creating appointment: ${appointment.id}")
+            val docRef = db.collection(APPOINTMENTS_COLLECTION).document()
+            val appointmentWithId = appointment.copy(id = docRef.id)
 
-            db.collection(APPOINTMENTS_COLLECTION)
-                .document(appointment.id)
-                .set(appointment)
-                .await()
+            Log.d("AppointmentDao", "Creating appointment with id: ${docRef.id}")
 
+            docRef.set(appointmentWithId).await()
             true
         } catch (e: Exception) {
             Log.e("AppointmentDao", "Failed to create appointment", e)

@@ -23,6 +23,7 @@ import com.example.homehealth.viewmodels.ChatListViewModel
 import com.example.homehealth.viewmodels.ChatViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
+import com.example.homehealth.viewmodels.ScheduleViewModel
 
 
 @Composable
@@ -81,22 +82,37 @@ fun NavGraph(
         }
 
         // Browsing made by patient/public
-        composable("browse_caretaker_screen/{userId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")!!
-            BrowseCaretakerScreen(navController, userId)
+        composable("browse_caretaker_screen") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+
+            val scheduleViewModel: ScheduleViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+            BrowseCaretakerScreen(navController, authViewModel, scheduleViewModel)
         }
 
-        composable("appointment_details_screen/{appointmentId}/{userId}") { backStackEntry ->
+        composable("appointment_details_screen/{appointmentId}") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+
             val appointmentId = backStackEntry.arguments?.getString("appointmentId")!!
-            val userId = backStackEntry.arguments?.getString("userId")!!
-            AppointmentDetailsScreen(navController, appointmentId, userId)
+            val scheduleViewModel: ScheduleViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+            AppointmentDetailsScreen(navController, appointmentId, authViewModel, scheduleViewModel)
         }
 
         // Scheduling made by patient/public
-        composable("schedule_screen/{userId}/{caretakerId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")!!
+        composable("schedule_screen/{caretakerId}") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+
             val caretakerId = backStackEntry.arguments?.getString("caretakerId")!!
-            ScheduleScreen(navController, userId, caretakerId)
+            val scheduleViewModel: ScheduleViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+            ScheduleScreen(navController, caretakerId, authViewModel, scheduleViewModel)
         }
 
         // Chat

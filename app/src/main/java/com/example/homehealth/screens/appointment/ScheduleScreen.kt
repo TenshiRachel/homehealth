@@ -24,8 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.homehealth.data.models.Appointment
 import com.example.homehealth.data.models.User
 import com.example.homehealth.fragments.BottomNavBar
+import com.example.homehealth.ui.textfield.TextFieldWithLabel
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ScheduleViewModel
@@ -33,35 +35,38 @@ import com.example.homehealth.viewmodels.ScheduleViewModel
 @Composable
 fun ScheduleScreen(
     navController: NavHostController,
-    userId: String,
     caretakerId: String,
     authViewModel: AuthViewModel = viewModel(),
     scheduleViewModel: ScheduleViewModel = viewModel()
 ) {
-    val user by scheduleViewModel.currentUser.observeAsState()
-//    val caretakers by scheduleViewModel.caretakers.observeAsState(emptyList())
+    val sessionUser = authViewModel.currentUser.value
+    val selectedCaretakerName = scheduleViewModel.selectedCaretakerName.value
 
-    LaunchedEffect(userId) {
-        scheduleViewModel.fetchCurrentUser(userId)
+    LaunchedEffect(caretakerId) {
+        scheduleViewModel.fetchSelectedCaretakerName(caretakerId)
     }
 
     // auth guard
-    if (user == null) {
+    if (sessionUser == null) {
         Text("Not authenticated")
         return
     }
 
-    // Fetch caretakers once
-    LaunchedEffect(Unit) {
-        scheduleViewModel.fetchAvailableCaretakers()
-    }
+    // Form state
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var apptDateTime by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+
+    var error by remember { mutableStateOf<String?>(null) }
+    var isSubmitting by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
             BottomNavBar(
                 navController,
-                user!!.uid,
-                user!!.role
+                sessionUser.uid,
+                sessionUser.role
             )
         }
     ) { paddingValues ->
@@ -69,14 +74,89 @@ fun ScheduleScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(20.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
             Text(
-                text = "Scheduling Screen TBD",
+                text = "Request Appointment with $selectedCaretakerName",
                 style = MaterialTheme.typography.headlineMedium
             )
 
+            TextFieldWithLabel(
+                label = "Appointment Title",
+                value = title,
+                onValueChange = { title = it }
+            )
+
+            TextFieldWithLabel(
+                label = "Description",
+                value = description,
+                onValueChange = { description = it }
+            )
+
+            TextFieldWithLabel(
+                label = "Appointment Date & Time",
+                value = apptDateTime,
+                onValueChange = { apptDateTime = it }
+            )
+
+            TextFieldWithLabel(
+                label = "My Location",
+                value = location,
+                onValueChange = { location = it }
+            )
+
+            if (error != null) {
+                Text(
+                    text = error!!,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSubmitting,
+                onClick = {
+                    if (
+                        title.isBlank() ||
+                        apptDateTime.isBlank() ||
+                        location.isBlank()
+                    ) {
+                        error = "Please fill in all required fields"
+                        return@Button
+                    }
+
+                    isSubmitting = true
+                    error = null
+
+                    scheduleViewModel.requestAppointment(
+                        Appointment(
+                            patientUid = sessionUser.uid,
+                            caretakerUid = caretakerId,
+                            caretakerName = selectedCaretakerName!!, // optional, can be fetched
+                            name = title,
+                            description = description,
+                            bookingDateTime = System.currentTimeMillis().toString(),
+                            apptDateTime = apptDateTime,
+                            location = location,
+                            status = "REQUESTED"
+                        ),
+                        onSuccess = {
+                            isSubmitting = false
+                            navController.popBackStack()
+                        },
+                        onError = {
+                            isSubmitting = false
+                            error = it
+                        }
+                    )
+                }
+            ) {
+                Text("Send Request")
+            }
         }
     }
 }

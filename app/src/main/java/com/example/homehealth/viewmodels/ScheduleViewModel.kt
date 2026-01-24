@@ -17,26 +17,14 @@ class ScheduleViewModel : ViewModel() {
     private val userRepository = UserRepository()
     private val appointmentRepository = AppointmentRepository()
 
-    private val _currentUser = MutableLiveData<User?>()
-    val currentUser: LiveData<User?> = _currentUser
-
     private val _currentAppointment = MutableLiveData<Appointment?>()
     val currentAppointment: LiveData<Appointment?> = _currentAppointment
 
     private val _caretakers = MutableLiveData<List<User>>()
     val caretakers: LiveData<List<User>> = _caretakers
 
-    fun fetchCurrentUser(userId: String) {
-        viewModelScope.launch {
-            val user = userRepository.getUserById(userId)
-            if (user == null){
-                Log.e("ScheduleViewModel", "No user found for id $userId")
-            }
-            else {
-                _currentUser.postValue(user)
-            }
-        }
-    }
+    private val _selectedCaretakerName = MutableLiveData<String>()
+    val selectedCaretakerName: LiveData<String> = _selectedCaretakerName
 
     fun fetchAvailableCaretakers() {
         viewModelScope.launch {
@@ -51,4 +39,27 @@ class ScheduleViewModel : ViewModel() {
             _currentAppointment.postValue(appointment)
         }
     }
+
+    fun requestAppointment(
+        appointment: Appointment,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                appointmentRepository.createAppointment(appointment)
+                onSuccess()
+            } catch (e: Exception) {
+                onError(e.message ?: "Failed to create appointment")
+            }
+        }
+    }
+
+    fun fetchSelectedCaretakerName(caretakerId: String){
+        viewModelScope.launch {
+            val user = userRepository.getUserById(caretakerId)
+            _selectedCaretakerName.postValue(user?.name)
+        }
+    }
+
 }
