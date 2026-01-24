@@ -2,7 +2,6 @@ package com.example.homehealth.screens.appointment
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,22 +14,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.homehealth.data.models.Appointment
-import com.example.homehealth.data.models.User
 import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.ui.textfield.TextFieldWithLabel
 import com.example.homehealth.viewmodels.AuthViewModel
-import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ScheduleViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ScheduleScreen(
@@ -139,7 +137,7 @@ fun ScheduleScreen(
                             caretakerName = selectedCaretakerName!!, // optional, can be fetched
                             name = title,
                             description = description,
-                            bookingDateTime = System.currentTimeMillis().toString(),
+                            bookingDateTime = getFormattedDateTime(),
                             apptDateTime = apptDateTime,
                             location = location,
                             status = "REQUESTED"
@@ -159,4 +157,9 @@ fun ScheduleScreen(
             }
         }
     }
+}
+
+fun getFormattedDateTime(): String {
+    val formatter = SimpleDateFormat("dd/MM/yy, HH:mm:ss", Locale.getDefault())
+    return formatter.format(Date())
 }

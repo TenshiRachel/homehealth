@@ -3,6 +3,8 @@ package com.example.homehealth.ui.cards
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,52 +25,50 @@ import com.example.homehealth.screens.AppointmentStatusChip
 @Composable
 fun AppointmentCard(
     appointment: Appointment,
-    onClick: () -> Unit
+    onViewDetails: () -> Unit,
+    onChat: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp)
-            .clickable { onClick() },
+        modifier = modifier
+            .fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.padding(16.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = appointment.name,
+                style = MaterialTheme.typography.titleMedium
+            )
 
-                Text(
-                    text = appointment.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = appointment.location,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Text(
+                text = appointment.location,
+                style = MaterialTheme.typography.bodyMedium
+            )
 
-                Text(
-                    text = appointment.apptDateTime,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Spacer(modifier = Modifier.height(12.dp))
 
-                AppointmentStatusChip(status = appointment.status)
-            }
-
-            OutlinedButton(
-                onClick = onClick,
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("View Details")
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = onViewDetails
+                ) {
+                    Text("View Details")
+                }
+
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = onChat
+                ) {
+                    Text("Chat")
+                }
             }
         }
     }

@@ -166,12 +166,18 @@ fun AppointmentList(
         items(appointments) { appointment ->
             AppointmentCard(
                 appointment = appointment,
-                onClick = {
-                    Log.d("appointmentID", appointment.id)
+                onViewDetails = {
+//                    Log.d("appointmentID", appointment.id)
                     navController.navigate(
                         "appointment_details_screen/${appointment.id}"
                     )
-                }
+                },
+                onChat = {
+//                    // To-do: Implement chat here
+//                    navController.navigate(
+//                        ""
+//                    )
+                },
             )
         }
     }
