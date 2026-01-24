@@ -34,10 +34,17 @@ class IndexViewModel : ViewModel() {
         }
     }
 
-    fun fetchAppointments(patientUid: String) {
+    fun fetchAppointmentsByPatient(userUid: String) {
         viewModelScope.launch {
             appointments.value =
-                appointmentRepository.getAppointmentsByPatient(patientUid)
+                appointmentRepository.getAppointmentsByPatient(userUid)
+        }
+    }
+
+    fun fetchAppointmentsByCaretaker(userUid: String) {
+        viewModelScope.launch {
+            appointments.value =
+                appointmentRepository.getAppointmentsByCaretaker(userUid)
         }
     }
 

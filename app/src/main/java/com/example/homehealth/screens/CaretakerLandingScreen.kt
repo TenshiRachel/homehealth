@@ -37,7 +37,7 @@ import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
 
 @Composable
-fun IndexScreen(
+fun CaretakerLandingScreen(
     navController: NavHostController,
     indexViewModel: IndexViewModel,
     authViewModel: AuthViewModel = viewModel()
@@ -62,36 +62,13 @@ fun IndexScreen(
         }
     }
 
-    // Role-based redirect
     LaunchedEffect(user) {
         if (user == null) return@LaunchedEffect
-        Log.d("Index", "Logged in successfully")
-
-        when (user.role) {
-            "public" -> Unit
-
-            "caretaker" -> {
-                navController.navigate("caretaker_landing_screen") {
-                    popUpTo("index_screen") { inclusive = true }
-                }
-            }
-
-            "admin" -> {
-                navController.navigate("admin_graph") {
-                    popUpTo("index_screen") { inclusive = true }
-                }
-            }
-
-            else -> {
-                Log.w("RoleRedirect", "Role not ready yet: ${user.role}")
-                // DO NOTHING — wait for state to settle
-            }
-        }
     }
 
     LaunchedEffect(user?.uid) {
         user?.uid?.let {
-            indexViewModel.fetchAppointmentsByPatient(it)
+            indexViewModel.fetchAppointmentsByCaretaker(it)
         }
     }
 
@@ -120,7 +97,7 @@ fun IndexScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // will implement a filter soon to separate booked and completed appointments
+            // will implement a filter soon to separate pending, booked and completed appointments
             Text(
                 text = "Your Appointments",
                 style = MaterialTheme.typography.bodyLarge
@@ -130,14 +107,6 @@ fun IndexScreen(
 
             if (appointments.isEmpty()) {
                 Text("You have no appointments yet.")
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    onClick = { navController.navigate("browse_caretaker_screen") }
-                ) {
-                    Text("Search Appointments")
-                }
             } else {
                 AppointmentList(
                     indexViewModel = indexViewModel,
@@ -146,19 +115,6 @@ fun IndexScreen(
                     navController = navController,
                     modifier = Modifier.weight(1f)
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    ),
-                    onClick = { navController.navigate("browse_caretaker_screen") }
-                ) {
-                    Text("Search for more appointments")
-                }
             }
         }
     }

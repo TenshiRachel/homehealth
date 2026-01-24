@@ -22,7 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.homehealth.data.models.Appointment
-import com.example.homehealth.screens.AppointmentStatusChip
+import com.example.homehealth.screens.appointment.AppointmentStatusChip
 
 @Composable
 fun AppointmentCard(

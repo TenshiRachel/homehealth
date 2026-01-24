@@ -70,9 +70,11 @@ fun LoginScreen(
                                 popUpTo("login_screen") {inclusive}
                             }
                         }
-                        "caregiver" -> {
+                        "caretaker" -> {
                             Log.d("Login", "Success, User ID: $message")
-                            navController.navigate("caregiver_home/${user.uid}")
+                            navController.navigate("index_screen"){
+                                popUpTo("login_screen") {inclusive}
+                            }
                         }
                         "admin" -> {
                             Log.d("Login", "Success, User ID: $message")
