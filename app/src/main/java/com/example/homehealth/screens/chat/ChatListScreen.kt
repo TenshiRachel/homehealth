@@ -1,6 +1,5 @@
 package com.example.homehealth.screens.chat
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +17,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
@@ -40,6 +41,7 @@ import com.example.homehealth.utils.formatTimestamp
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ChatListViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatListScreen(navController: NavHostController,
                    chatListViewModel: ChatListViewModel = viewModel(),
@@ -66,6 +68,16 @@ fun ChatListScreen(navController: NavHostController,
     }
 
     Scaffold (
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Your Chats",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+            )
+        },
         bottomBar = { BottomNavBar(navController, sessionUser.uid, sessionUser.role) }
     ) { paddingValues ->
         if (userChats.isEmpty()){
@@ -98,6 +110,8 @@ fun ChatListItem(
     val otherUser = chat.members.firstOrNull {
         it.uid != currentUserId
     }
+
+    HorizontalDivider()
 
     Row(
         modifier = Modifier
@@ -138,8 +152,6 @@ fun ChatListItem(
             color = Color.Gray
         )
     }
-
-    HorizontalDivider()
 }
 
 @Composable

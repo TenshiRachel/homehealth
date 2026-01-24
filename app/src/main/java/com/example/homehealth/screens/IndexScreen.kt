@@ -1,7 +1,6 @@
 package com.example.homehealth.screens
 
 import android.util.Log
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,26 +10,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.homehealth.data.models.Appointment
+import com.example.homehealth.data.models.User
 import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.ui.cards.AppointmentCard
 import com.example.homehealth.viewmodels.AuthViewModel
@@ -46,6 +45,15 @@ fun IndexScreen(
     val user = indexViewModel.currentUser.value
     val sessionUser = authViewModel.currentUser.value
     val appointments = indexViewModel.appointments.value
+
+    val createdChatId by indexViewModel.createdChatId.collectAsState(null)
+
+    LaunchedEffect(createdChatId) {
+        createdChatId?.let { chatId ->
+            navController.navigate("chat_screen/$chatId")
+            indexViewModel.consumeChatId()
+        }
+    }
 
     LaunchedEffect(sessionUser) {
         sessionUser?.uid?.let { userId ->
@@ -103,46 +111,51 @@ fun IndexScreen(
             verticalArrangement = Arrangement.SpaceBetween // this pushes bottom buttons down
         ) {
             // Top content
-            Column {
-                Text(
-                    text = "Welcome back, ${user.name}!",
-                    style = MaterialTheme.typography.headlineMedium
+            Text(
+                text = "Welcome back, ${user.name}!",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // will implement a filter soon to separate booked and completed appointments
+            Text(
+                text = "Your Appointments",
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (appointments.isEmpty()) {
+                Text("You have no appointments yet.")
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { navController.navigate("browse_caretaker_screen") }
+                ) {
+                    Text("Search Appointments")
+                }
+            } else {
+                AppointmentList(
+                    indexViewModel = indexViewModel,
+                    sessionUser = sessionUser!!,
+                    appointments = appointments,
+                    navController = navController,
+                    modifier = Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // will implement a filter soon to separate booked and completed appointments
-                Text(
-                    text = "Your Appointments",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                if (appointments.isEmpty()) {
-                    Text("You have no appointments yet.")
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = { navController.navigate("browse_caretaker_screen") }
-                    ) {
-                        Text("Search Appointments")
-                    }
-                } else {
-                    AppointmentList(
-                        appointments = appointments,
-                        navController = navController,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = { navController.navigate("browse_caretaker_screen") }
-                    ) {
-                        Text("Search for more appointments")
-                    }
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black,
+                        contentColor = Color.White
+                    ),
+                    onClick = { navController.navigate("browse_caretaker_screen") }
+                ) {
+                    Text("Search for more appointments")
                 }
             }
         }
@@ -151,6 +164,8 @@ fun IndexScreen(
 
 @Composable
 fun AppointmentList(
+    indexViewModel: IndexViewModel,
+    sessionUser: User,
     appointments: List<Appointment>,
     navController: NavHostController,
     modifier: Modifier = Modifier
@@ -173,10 +188,13 @@ fun AppointmentList(
                     )
                 },
                 onChat = {
-//                    // To-do: Implement chat here
-//                    navController.navigate(
-//                        ""
-//                    )
+                    // Create chat
+                    indexViewModel.createChat(
+                        currentUserId = sessionUser.uid,
+                        userName1 = sessionUser.name,
+                        userId2 = appointment.caretakerUid,
+                        userName2 = appointment.caretakerName
+                    )
                 },
             )
         }

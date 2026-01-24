@@ -1,7 +1,6 @@
 package com.example.homehealth.data.dao
 
 import android.util.Log
-import com.example.homehealth.data.models.User
 import com.example.homehealth.data.models.chat.Chat
 import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.models.chat.Message
@@ -83,7 +82,7 @@ class ChatDao {
 
     suspend fun getUserChats(userId: String): List<Chat> {
         val snapshot = db.collection(CHATS_COLLECTION)
-            .whereArrayContains("members", userId)
+            .whereArrayContains("memberIds", userId)
             .orderBy("lastMessageTime", Query.Direction.DESCENDING)
             .get()
             .await()
@@ -93,15 +92,16 @@ class ChatDao {
 
     suspend fun getMessagesByChat(chatId: String): List<Message> {
         return try {
-            val snapshot = db.collection(MESSAGES_COLLECTION)
-                .whereEqualTo("chatId", chatId)
+            val snapshot = db.collection(CHATS_COLLECTION)
+                .document(chatId)
+                .collection(MESSAGES_COLLECTION)
+                .orderBy("timestamp") // very important
                 .get()
                 .await()
 
-            snapshot.documents.mapNotNull { document ->
-                document.toObject(Message::class.java)
-            }
-        } catch (e: Exception){
+            snapshot.toObjects(Message::class.java)
+        } catch (e: Exception) {
+            Log.e("ChatRepo", "Failed to load messages", e)
             emptyList()
         }
     }
