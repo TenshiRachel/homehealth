@@ -14,6 +14,7 @@ import com.example.homehealth.screens.chat.ChatScreen
 import com.example.homehealth.screens.profile.ProfileScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
+import com.example.homehealth.screens.CaretakerLandingScreen
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.screens.admin.adminGraph
 import com.example.homehealth.screens.appointment.AppointmentDetailsScreen
@@ -113,6 +114,17 @@ fun NavGraph(
             val scheduleViewModel: ScheduleViewModel = viewModel(rootEntry)
             val authViewModel: AuthViewModel = viewModel(rootEntry)
             ScheduleScreen(navController, caretakerId, authViewModel, scheduleViewModel)
+        }
+
+        // Caretaker landing
+        composable("caretaker_landing_screen") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+            val indexViewModel: IndexViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+
+            CaretakerLandingScreen(navController, indexViewModel, authViewModel)
         }
 
         // Chat
