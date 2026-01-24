@@ -28,9 +28,17 @@ class AuthViewModel: ViewModel() {
         }
 
         // Check if password is alphanumeric (only letters and numbers)
-        val regex = "^[a-zA-Z0-9]*$".toRegex()
+        val regex = "^[a-zA-Z0-9]+$".toRegex()
         if (!password.matches(regex)) {
             return "Password must be alphanumeric."
+        }
+
+        if (!password.any { it.isLetter() }) {
+            return "Password must contain at least one letter."
+        }
+
+        if (!password.any { it.isDigit() }) {
+            return "Password must contain at least one number."
         }
 
         if (password != confirm){
@@ -105,7 +113,11 @@ class AuthViewModel: ViewModel() {
     }
 
     fun register(name: String, email: String, password: String, confirm: String, onResult: (Boolean, String?) -> Unit) {
-        val passwordValidationError = validatePassword(password, confirm)
+        val cleanPassword = password.trim()
+        val cleanConfirm = confirm.trim()
+
+        val passwordValidationError = validatePassword(cleanPassword, cleanConfirm)
+
         if (passwordValidationError != null) {
             // If the password is invalid, return the error message
             onResult(false, passwordValidationError)
@@ -113,7 +125,7 @@ class AuthViewModel: ViewModel() {
         }
 
         viewModelScope.launch {
-            val firebaseResult = registerFirebase(email, password)
+            val firebaseResult = registerFirebase(email.trim(), cleanPassword)
             if (firebaseResult.isSuccess) {
                 val userId = firebaseResult.getOrNull()!!
                 Log.d("Registration", "Firebase Auth successful. UserId: $userId")
