@@ -15,6 +15,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -96,7 +97,17 @@ fun IndexScreen(
     }
 
     if (user == null) {
-        Text("Loading...", modifier = Modifier.padding(20.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Loading...")
+            Spacer(modifier = Modifier.height(12.dp))
+            CircularProgressIndicator()
+        }
         return
     }
 
