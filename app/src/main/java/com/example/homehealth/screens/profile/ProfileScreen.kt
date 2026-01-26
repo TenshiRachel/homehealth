@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
 
@@ -34,86 +35,101 @@ fun ProfileScreen(
         }
     }
 
-    user?.let { profile ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+    if (sessionUser == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            CircularProgressIndicator()
+        }
+        return
+    }
 
-            // 🔵 Profile picture placeholder
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Profile picture",
-                tint = Color.Gray,
+    user?.let { profile ->
+        Scaffold (
+            bottomBar = { BottomNavBar(navController, sessionUser.uid, sessionUser.role) }
+        ) { paddingValues ->
+            Column(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedTextField(
-                value = profile.name,
-                onValueChange = {},
-                label = { Text("Name") },
-                singleLine = true,
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = profile.email,
-                onValueChange = {},
-                label = { Text("Email") },
-                singleLine = true,
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = profile.bio.ifEmpty { "No bio provided" },
-                onValueChange = {},
-                label = { Text("Bio") },
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Button(onClick = {
-                Log.d("ProfileScreen", "Edit Profile button clicked")
-                // Navigate to EditProfileScreen
-                navController.navigate("edit_profile_screen")
-            },
-                modifier = Modifier.fillMaxWidth()
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
             ) {
-                Text("Edit Profile")
-            }
+                Spacer(modifier = Modifier.height(32.dp))
 
-            // Logout Button
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    Log.d("ProfileScreen", "Logout button clicked")
+                // 🔵 Profile picture placeholder
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "Profile picture",
+                    tint = Color.Gray,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                )
 
-                    authViewModel.logout()
+                Spacer(modifier = Modifier.height(24.dp))
 
-                    navController.navigate("login_screen") {
-                        popUpTo("auth_graph") {
-                            inclusive = true
-                        }
-                    }
+                OutlinedTextField(
+                    value = profile.name,
+                    onValueChange = {},
+                    label = { Text("Name") },
+                    singleLine = true,
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = profile.email,
+                    onValueChange = {},
+                    label = { Text("Email") },
+                    singleLine = true,
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = profile.bio.ifEmpty { "No bio provided" },
+                    onValueChange = {},
+                    label = { Text("Bio") },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = {
+                    Log.d("ProfileScreen", "Edit Profile button clicked")
+                    // Navigate to EditProfileScreen
+                    navController.navigate("edit_profile_screen")
                 },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Logout")
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Edit Profile")
+                }
+
+                // Logout Button
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        Log.d("ProfileScreen", "Logout button clicked")
+
+                        authViewModel.logout()
+
+                        navController.navigate("login_screen") {
+                            popUpTo("auth_graph") {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Logout")
+                }
             }
         }
     } ?: run {
@@ -121,7 +137,7 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Loading profile...")
+            CircularProgressIndicator()
         }
     }
 }

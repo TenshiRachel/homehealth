@@ -1,5 +1,7 @@
 package com.example.homehealth.screens.chat
 
+import android.Manifest
+import android.app.Application
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,22 +37,41 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.homehealth.data.models.chat.Message
+import com.example.homehealth.data.models.chat.MessageType
 import com.example.homehealth.utils.formatTimestamp
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ChatViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ChatScreen(navController: NavHostController,
                chatId: String,
-               chatViewmodel: ChatViewModel = viewModel(),
+               chatViewmodel: ChatViewModel = viewModel(
+                   factory = ViewModelProvider.AndroidViewModelFactory(LocalContext.current.applicationContext as Application)
+               ),
                authViewModel: AuthViewModel = viewModel()
 ){
+    val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+
     val chat by chatViewmodel.chat.observeAsState(null)
     val messages by chatViewmodel.messages.observeAsState(emptyList())
 
@@ -94,6 +116,18 @@ fun ChatScreen(navController: NavHostController,
                             text = messageText
                         )
                         messageText = ""
+                    }
+                },
+                onShareLocation = {
+                    if (permissionState.status.isGranted) {
+                        chatViewmodel.sendLocation(
+                            chatId = chatId,
+                            senderId = sessionUser.uid,
+                            recipientId = otherUser.uid
+                        )
+                    }
+                    else {
+                        permissionState.launchPermissionRequest()
                     }
                 }
             )
@@ -144,7 +178,8 @@ fun ChatTopBar(
 fun ChatInputBar(
     text: String,
     onTextChange: (String) -> Unit,
-    onSend: () -> Unit
+    onSend: () -> Unit,
+    onShareLocation: () -> Unit
 ) {
     Surface(shadowElevation = 8.dp) {
         Row(
@@ -153,6 +188,14 @@ fun ChatInputBar(
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(
+                onClick = onShareLocation
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Share Location"
+                )
+            }
             TextField(
                 value = text,
                 onValueChange = onTextChange,
@@ -197,14 +240,32 @@ fun ChatBubble(
                     MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text(
-                    text = message.text,
-                    modifier = Modifier.padding(12.dp),
-                    color = if (isOwnMessage)
-                        MaterialTheme.colorScheme.onPrimary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                when (message.type) {
+                    MessageType.TEXT -> {
+                        Text(
+                            text = message.payload.text!!,
+                            modifier = Modifier.padding(12.dp),
+                            color = if (isOwnMessage)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    MessageType.LOCATION -> {
+                        val lat = message.payload.latitude ?: 0.0
+                        val long = message.payload.longitude ?: 0.0
+
+                        LocationPreview(
+                            latitude = lat,
+                            longitude = long
+                        )
+                    }
+
+                    MessageType.IMAGE -> {
+
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -215,5 +276,32 @@ fun ChatBubble(
                 color = Color.Gray
             )
         }
+    }
+}
+
+@Composable
+fun LocationPreview(
+    latitude: Double,
+    longitude: Double
+) {
+    val location = LatLng(latitude, longitude)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(location, 15f)
+    }
+
+    GoogleMap(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .clip(RoundedCornerShape(12.dp)),
+        cameraPositionState = cameraPositionState,
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = false,
+            scrollGesturesEnabled = false
+        )
+    ) {
+        Marker(
+            state = MarkerState(position = location)
+        )
     }
 }

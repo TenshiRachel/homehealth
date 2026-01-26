@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.homehealth.data.models.chat.Chat
 import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.models.chat.Message
+import com.example.homehealth.data.models.chat.MessageType
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
@@ -61,7 +62,11 @@ class ChatDao {
             .document(chatId)
             .update(
                 mapOf(
-                    "lastMessage" to message.text,
+                    "lastMessage" to when (message.type){
+                        MessageType.TEXT -> message.payload.text
+                        MessageType.LOCATION -> "Location"
+                        MessageType.IMAGE -> "Image"
+                    },
                     "lastMessageTime" to message.timestamp
                 )
             ).await()

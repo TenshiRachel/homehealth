@@ -1,16 +1,21 @@
 package com.example.homehealth.viewmodels
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.homehealth.data.models.chat.Chat
 import com.example.homehealth.data.models.chat.Message
+import com.example.homehealth.data.models.chat.MessagePayload
+import com.example.homehealth.data.models.chat.MessageType
 import com.example.homehealth.data.repository.ChatRepository
+import com.example.homehealth.utils.LocationProvider
 import kotlinx.coroutines.launch
 
-class ChatViewModel: ViewModel() {
+class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val chatRepository: ChatRepository = ChatRepository()
+    private val locationProvider: LocationProvider = LocationProvider(application)
 
     private val _chat = MutableLiveData<Chat>()
     val chat: LiveData<Chat> = _chat
@@ -38,9 +43,26 @@ class ChatViewModel: ViewModel() {
                  chatId = chatId,
                  senderId = senderId,
                  recipientId = recipientId,
-                 text = text
+                 type = MessageType.TEXT,
+                 payload = MessagePayload(text = text)
              )
              chatRepository.sendMessage(chatId, message)
          }
+    }
+
+    fun sendLocation(chatId: String, senderId: String, recipientId: String){
+        viewModelScope.launch {
+            val location = locationProvider.getLastLocation() ?: return@launch
+
+            val message = Message(
+                chatId = chatId,
+                senderId = senderId,
+                recipientId = recipientId,
+                type = MessageType.LOCATION,
+                payload = MessagePayload(longitude = location.longitude, latitude = location.latitude)
+            )
+
+            chatRepository.sendMessage(chatId, message)
+        }
     }
 }

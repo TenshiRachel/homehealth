@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
 
@@ -31,69 +32,74 @@ fun EditProfileScreen(
         }
     }
 
-    if (user == null) {
+    if (user == null || sessionUser == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Loading profile...")
+            CircularProgressIndicator()
         }
         return
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Icon(
-            imageVector = Icons.Filled.AccountCircle,
-            contentDescription = "Profile picture",
-            modifier = Modifier.size(100.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedTextField(
-            value = editState.name,
-            onValueChange = { profileViewModel.onNameChanged(it) },
-            label = { Text("Name") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = user!!.email,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = editState.bio,
-            onValueChange = { profileViewModel.onBioChanged(it) },
-            label = { Text("Bio") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                profileViewModel.saveProfile()
-                navController.popBackStack()
-            }
+    Scaffold(
+        bottomBar = { BottomNavBar(navController, sessionUser.uid, sessionUser.role) }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Save")
+
+            Icon(
+                imageVector = Icons.Filled.AccountCircle,
+                contentDescription = "Profile picture",
+                modifier = Modifier.size(100.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            OutlinedTextField(
+                value = editState.name,
+                onValueChange = { profileViewModel.onNameChanged(it) },
+                label = { Text("Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = user!!.email,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = editState.bio,
+                onValueChange = { profileViewModel.onBioChanged(it) },
+                label = { Text("Bio") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    profileViewModel.saveProfile()
+                    navController.popBackStack()
+                }
+            ) {
+                Text("Save")
+            }
         }
     }
 }

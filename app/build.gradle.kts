@@ -17,6 +17,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        resValue("string", "google_maps_key", project.properties["MAPS_API_KEY"].toString())
     }
 
     buildTypes {
@@ -75,4 +77,16 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
     implementation(libs.google.firebase.firestore)
     implementation(libs.firebase.auth)
+
+    // Location
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    // Permissions
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+
+    // Google Maps Compose
+    implementation("com.google.maps.android:maps-compose:4.4.1") // latest stable
+
+    // Google Maps SDK for Android
+    implementation("com.google.android.gms:play-services-maps:20.0.0")
 }
