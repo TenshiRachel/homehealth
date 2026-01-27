@@ -6,6 +6,8 @@ import androidx.navigation.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
+import com.example.homehealth.screens.admin.skill.CreateSkillScreen
+import com.example.homehealth.screens.admin.skill.ManageSkillsScreen
 import com.example.homehealth.viewmodels.AdminViewModel
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.SkillViewModel
