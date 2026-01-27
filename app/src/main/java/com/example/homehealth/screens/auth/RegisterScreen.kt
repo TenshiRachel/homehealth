@@ -30,9 +30,10 @@ import com.example.homehealth.viewmodels.AuthViewModel
 import androidx.compose.ui.text.input.KeyboardType
 
 @Composable
-fun RegisterScreen(navController: NavHostController){
+fun RegisterScreen(navController: NavHostController,
+                   authViewModel: AuthViewModel = AuthViewModel()
+){
     val context = LocalContext.current
-    val authViewModel = AuthViewModel()
 
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
