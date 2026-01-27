@@ -11,6 +11,9 @@ import com.example.homehealth.screens.admin.skill.ManageSkillsScreen
 import com.example.homehealth.viewmodels.AdminViewModel
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.SkillViewModel
+import com.example.homehealth.screens.admin.certification.ManageCertificationScreen
+import com.example.homehealth.screens.admin.certification.CreateCertificationScreen
+import com.example.homehealth.viewmodels.CertificationViewModel
 
 fun NavGraphBuilder.adminGraph(navController: NavHostController) {
     navigation(
@@ -59,6 +62,24 @@ fun NavGraphBuilder.adminGraph(navController: NavHostController) {
                 navController = navController,
                 skillViewModel = skillViewModel
             )
+        }
+
+        composable("manage_certifications_screen") { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("admin_graph")
+            }
+
+            val certificationViewModel: CertificationViewModel = viewModel(parentEntry)
+
+            ManageCertificationScreen(navController, certificationViewModel)
+        }
+
+        composable("create_certification_screen") { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("admin_graph")
+            }
+            val certificationViewModel: CertificationViewModel = viewModel(parentEntry)
+            CreateCertificationScreen(navController, certificationViewModel)
         }
     }
 }
