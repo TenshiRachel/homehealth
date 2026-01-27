@@ -1,4 +1,4 @@
-package com.example.homehealth.screens.admin.skill
+package com.example.homehealth.screens.admin
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
