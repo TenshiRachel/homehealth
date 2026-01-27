@@ -89,15 +89,6 @@ fun AdminDashboardScreen(
             ) {
                 Text("Manage Skills")
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { navController.navigate("manage_certifications_screen") }
-            ) {
-                Text("Manage Certifications")
-            }
         }
     }
 }
