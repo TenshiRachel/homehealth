@@ -19,7 +19,9 @@ import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.screens.admin.adminGraph
 import com.example.homehealth.screens.appointment.AppointmentDetailsScreen
 import com.example.homehealth.screens.appointment.BrowseCaretakerScreen
+import com.example.homehealth.screens.profile.CaretakerProfileScreen
 import com.example.homehealth.screens.profile.EditProfileScreen
+import com.example.homehealth.viewmodels.CaretakerViewModel
 import com.example.homehealth.viewmodels.ChatListViewModel
 import com.example.homehealth.viewmodels.ChatViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
@@ -36,8 +38,13 @@ fun NavGraph(
         startDestination = "auth_graph"
     ){
         navigation(startDestination = "login_screen", route = "auth_graph") {
-            composable("register_screen"){
-                RegisterScreen(navController)
+            composable("register_screen") { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(navController.graph.id)
+                }
+                val authViewModel: AuthViewModel = viewModel(parentEntry)
+
+                RegisterScreen(navController, authViewModel)
             }
 
             composable("login_screen") { backStackEntry ->
@@ -70,6 +77,16 @@ fun NavGraph(
             val authViewModel: AuthViewModel = viewModel(rootEntry)
 
             ProfileScreen(navController, profileViewModel, authViewModel)
+        }
+
+        composable("caretaker_profile_screen") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+            val caretakerProfileViewModel: CaretakerViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+
+            CaretakerProfileScreen(navController, caretakerProfileViewModel, authViewModel)
         }
 
         composable("edit_profile_screen") { backStackEntry ->

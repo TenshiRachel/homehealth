@@ -73,10 +73,28 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
             )
         }
 
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
+//            label = { Text("Profile") },
+//            selected = navController.currentDestination?.route == "profile_screen",
+//            colors = NavigationBarItemDefaults.colors(
+//                selectedIconColor = Color.White,
+//                selectedTextColor = Color.Blue.copy(alpha = 0.5f),
+//                unselectedIconColor = Color.Black,
+//                unselectedTextColor = Color.Black,
+//                indicatorColor = Color.Blue.copy(alpha = 0.5f)
+//            ),
+//            onClick = {
+//                navController.navigate("profile_screen") {
+//                    launchSingleTop = true
+//                }
+//            }
+//        )
         NavigationBarItem(
             icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
             label = { Text("Profile") },
-            selected = navController.currentDestination?.route == "profile_screen",
+            selected = navController.currentDestination?.route == "profile_screen" ||
+                    navController.currentDestination?.route == "caretaker_profile/$userId",
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color.White,
                 selectedTextColor = Color.Blue.copy(alpha = 0.5f),
@@ -85,8 +103,14 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
                 indicatorColor = Color.Blue.copy(alpha = 0.5f)
             ),
             onClick = {
-                navController.navigate("profile_screen") {
-                    launchSingleTop = true
+                if (role == "caretaker") {
+                    navController.navigate("caretaker_profile_screen") {
+                        launchSingleTop = true
+                    }
+                } else {
+                    navController.navigate("profile_screen") {
+                        launchSingleTop = true
+                    }
                 }
             }
         )

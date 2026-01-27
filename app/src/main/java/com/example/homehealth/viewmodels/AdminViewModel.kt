@@ -2,15 +2,20 @@ package com.example.homehealth.viewmodels
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.homehealth.data.models.CaretakerDetails
 import com.example.homehealth.data.models.User
 import com.example.homehealth.data.repository.UserRepository
+import com.example.homehealth.data.repository.AuthRepository
+import com.example.homehealth.data.repository.CaretakerDetailsRepository
 import kotlinx.coroutines.launch
 
 class AdminViewModel : ViewModel() {
+    private val authRepository = AuthRepository()
+    private val userRepository = UserRepository()
+    private val caretakerDetailsRepository = CaretakerDetailsRepository()
     private val _currentAdmin = mutableStateOf<User?>(null)
     val currentAdmin: State<User?> = _currentAdmin
 
@@ -36,9 +41,69 @@ class AdminViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                _users.value = UserRepository().getAllUsers()
+                _users.value = userRepository.getAllUsers()
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to load users: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun createCaretakerAccount(
+        email: String,
+        password: String,
+        name: String,
+        details: CaretakerDetails,
+        onResult: (Boolean, String?) -> Unit
+    ){
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            // Trim inputs
+            val cleanEmail = email.trim()
+            val cleanName = name.trim()
+            val cleanPassword = password.trim()
+
+            try {
+                // 1. Create Firebase Auth account
+                authRepository.register(cleanEmail, cleanPassword).onSuccess { uid ->
+
+                    // 2. Create User document
+                    val user = User(
+                        uid = uid,
+                        email = cleanEmail,
+                        name = cleanName,
+                        role = "caretaker"
+                    )
+                    val isCaretakerRegistered = userRepository.createUser(user)
+
+                    if (!isCaretakerRegistered) {
+                        onResult(false, "Failed to create user profile")
+                        return@launch
+                    }
+                    // 3. Create caretaker details
+                    val isCaretakerCreated = caretakerDetailsRepository.createCaretakerProfile(
+                        details.copy(uid = uid)
+                    )
+                    if (!isCaretakerCreated) {
+                        onResult(false, "Failed to create caretaker profile")
+                        return@launch
+                    }
+                    onResult(true, "Caretaker account created successfully")
+                    loadAllUsers() // Refresh the list
+                }.onFailure { exception ->
+                    when (exception) {
+                        is FirebaseAuthUserCollisionException ->
+                            onResult(false, "Email already registered")
+
+                        else ->
+                            onResult(false, "Auth failed: ${exception.localizedMessage}")
+                    }
+                }
+            } catch (e: Exception) {
+                onResult(false, "Error: ${e.message}")
             } finally {
                 _isLoading.value = false
             }

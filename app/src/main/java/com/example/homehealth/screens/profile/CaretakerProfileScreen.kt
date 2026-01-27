@@ -1,0 +1,239 @@
+package com.example.homehealth.screens.profile
+
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.homehealth.viewmodels.CaretakerViewModel
+import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Card
+import androidx.compose.material3.AssistChip
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.homehealth.data.models.CaretakerProfile
+import androidx.compose.foundation.layout.FlowRow
+import androidx.navigation.NavHostController
+import com.example.homehealth.fragments.BottomNavBar
+import com.example.homehealth.viewmodels.AuthViewModel
+
+@Composable
+fun CaretakerProfileScreen(
+    navController: NavHostController,
+    caretakerProfileViewModel: CaretakerViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
+) {
+    val profile by caretakerProfileViewModel.caretakerProfile.collectAsState()
+    val isLoading by caretakerProfileViewModel.isLoading.collectAsState()
+    val error by caretakerProfileViewModel.error.collectAsState()
+    val sessionUser = authViewModel.currentUser.value
+
+    LaunchedEffect(sessionUser) {
+        sessionUser?.uid?.let { userId ->
+            caretakerProfileViewModel.loadCaretakerProfile(userId)
+        }
+    }
+
+    if (sessionUser == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    Scaffold(
+        bottomBar = { BottomNavBar(navController, sessionUser.uid, sessionUser.role) }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when {
+                isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                error != null -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = error ?: "Unknown error",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            sessionUser.uid.let { caretakerProfileViewModel.loadCaretakerProfile(it) }
+                        }) {
+                            Text("Retry")
+                        }
+                    }
+                }
+                profile != null -> {
+                    CaretakerProfileContent(profile = profile!!)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CaretakerProfileContent(profile: CaretakerProfile) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        // Header Section
+        Text(
+            text = profile.name,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = profile.email,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Bio
+        if (profile.bio.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("About", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(profile.bio, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Details Section
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Details", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                ProfileDetailRow("Gender", profile.gender)
+                ProfileDetailRow("Age", "${profile.age} years")
+                ProfileDetailRow("Experience", "${profile.yearsOfExperience} years")
+                ProfileDetailRow("Type", profile.caretakerType.name.replace("_", " "))
+                ProfileDetailRow("Availability", profile.availabilityType.name.replace("_", " "))
+                ProfileDetailRow("Night Care", if (profile.nightCare) "Available" else "Not Available")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Skills Section
+        if (profile.skills.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Skills", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        profile.skills.forEach { skill ->
+                            AssistChip(
+                                onClick = { },
+                                label = { Text(skill.name) }
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Certifications Section
+        if (profile.certifications.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Certifications", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    profile.certifications.forEach { cert ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(cert.name, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfileDetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}

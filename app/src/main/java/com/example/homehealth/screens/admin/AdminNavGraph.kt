@@ -38,6 +38,20 @@ fun NavGraphBuilder.adminGraph(navController: NavHostController) {
             )
         }
 
+        // Create Caretaker Screen
+        composable("create_caretaker_screen") { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("admin_graph")
+            }
+            val adminViewModel: AdminViewModel = viewModel(parentEntry)
+            val certificationViewModel : CertificationViewModel = viewModel(parentEntry)
+            CreateCaretakerScreen(
+                navController = navController,
+                adminViewModel = adminViewModel,
+                certificationViewModel = certificationViewModel
+            )
+        }
+
         // Manage Skills Screen
         composable("create_skill_screen") { backStackEntry ->
             val parentEntry = remember(backStackEntry) {
