@@ -7,16 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.homehealth.data.models.User
 import com.example.homehealth.data.repository.UserRepository
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import com.example.homehealth.data.repository.AuthRepository
 
 class AuthViewModel: ViewModel() {
+    private val authRepository = AuthRepository()
     private val userRepository = UserRepository()
-    val auth = FirebaseAuth.getInstance()
 
     private val _currentUser = mutableStateOf<User?>(null)
     val currentUser: State<User?> = _currentUser
@@ -49,118 +48,64 @@ class AuthViewModel: ViewModel() {
         return null
     }
 
-    private suspend fun registerFirebase(email: String, password: String): Result<String> {
-        return try {
-            Log.d("FirebaseAuth", "Attempting to register: $email")
-            val authResult = auth.createUserWithEmailAndPassword(email, password).await()
-            val userId = authResult.user?.uid
-            Log.d("FirebaseAuth", "Registration successful. UID: $userId")
-            if (userId != null) {
-                Result.success(userId)
-            } else {
-                Log.e("FirebaseAuth", "User ID is null after registration")
-                Result.failure(Exception("User ID is null"))
-            }
-        } catch(e: FirebaseAuthUserCollisionException) {
-            Log.e("FirebaseAuth", "Email already in use", e)
-            Result.failure(e)
-        } catch (e: FirebaseAuthInvalidCredentialsException) {
-            Log.e("FirebaseAuth", "Invalid credentials", e)
-            Result.failure(e)
-        } catch (e: Exception) {
-            Log.e("FirebaseAuth", "Registration failed with exception: ${e.message}", e)
-            Result.failure(e)
-        }
-    }
-
-    fun loginFirebase(email: String, password: String, onResult: (Boolean, String?, User?) -> Unit) {
-        viewModelScope.launch {
-            try {
-                // Firebase login
-                val authResult = auth.signInWithEmailAndPassword(email, password).await()
-
-                // Check if the login was successful
-                val firebaseUid = authResult.user?.uid
-
-                if (firebaseUid != null) {
-                    // Fetch the user from Firestore by email
-                    val user = userRepository.getUserByEmail(email)
-
-                    if (user != null) {
-                        _currentUser.value = user
-                        onResult(true, user.uid, user)
-                    } else {
-                        // If no user found, return failure
-                        onResult(false, "User data not found.", null)
-                    }
-                } else {
-                    // If Firebase UID is null
-                    onResult(false, "Login failed. Please try again.", null)
-                }
-            } catch (e: FirebaseAuthInvalidUserException){
-                Log.e("FirebaseAuth", "Login failed", e)
-                onResult(false, "No user found with this email.", null)
-            } catch (e: FirebaseAuthInvalidCredentialsException) {
-                // Handle any exceptions related to Firebase Authentication
-                Log.e("FirebaseAuth", "Login failed", e)
-                onResult(false, "Invalid credentials. Please try again.", null)
-            } catch (e: Exception) {
-                // Catch any other exceptions
-                Log.e("FirebaseAuth", "Unexpected error", e)
-                onResult(false, "Unexpected error occurred.", null)
-            }
-        }
-    }
-
     fun register(name: String, email: String, password: String, confirm: String, onResult: (Boolean, String?) -> Unit) {
         val cleanPassword = password.trim()
         val cleanConfirm = confirm.trim()
+        val cleanEmail = email.trim()
+        val cleanName = name.trim()
 
-        val passwordValidationError = validatePassword(cleanPassword, cleanConfirm)
+        val passwordValidator = validatePassword(cleanPassword, cleanConfirm)
 
-        if (passwordValidationError != null) {
+        if (passwordValidator != null) {
             // If the password is invalid, return the error message
-            onResult(false, passwordValidationError)
+            onResult(false, passwordValidator)
             return
         }
 
         viewModelScope.launch {
-            val firebaseResult = registerFirebase(email.trim(), cleanPassword)
-            if (firebaseResult.isSuccess) {
-                val userId = firebaseResult.getOrNull()!!
-                Log.d("Registration", "Firebase Auth successful. UserId: $userId")
-
-                // Create new user and store to firebase if registered successfully
-                val user = User(uid = userId, name = name, email = email, role = "public")
+            // 1. Register to Firebase Auth
+            authRepository.register(cleanEmail, cleanPassword).onSuccess { uid ->
+                // 2. Create new user and store to firebase if registered successfully
+                val user = User(uid = uid, name = cleanName, email = cleanEmail, role = "public")
                 Log.d("Registration", "Created User object: $user")
 
-                val dbSuccess = userRepository.createUser(user)
-                Log.d("Registration", "Firestore write result: $dbSuccess")
-
-                if (dbSuccess) {
+                val isSuccess = userRepository.createUser(user)
+                if (isSuccess) {
                     Log.d("User Registered", "Success")
                     onResult(true, "Registration successful! Please log in")
                 } else {
                     Log.d("User Registration", "Failed to save user in Firestore")
                     onResult(false, "Failed to save user in Firebase")
                 }
-            } else {
-                val exception = firebaseResult.exceptionOrNull()
-                Log.d("Firebase Registration", "Failed", exception)
-                // Handling Firebase errors more granularly
+            }.onFailure { exception ->
                 when (exception) {
-                    // If duplicate email
-                    is FirebaseAuthUserCollisionException -> {
-                        onResult(false, "The email is already registered.")
-                    }
-                    // If invalid email format
-                    is FirebaseAuthInvalidCredentialsException -> {
-                        onResult(false, "The email format is invalid.")
-                    }
-                    else -> {
-                        // Other exceptions
-                        onResult(false, "Could not register with Firebase: ${exception?.localizedMessage}")
-                    }
+                    is FirebaseAuthUserCollisionException ->
+                        onResult(false, "Email already registered")
+                    else ->
+                        onResult(false, exception.localizedMessage)
+                }
+            }
+        }
+    }
+
+    fun login(email: String, password: String, onResult: (Boolean, String?, User?) -> Unit) {
+        viewModelScope.launch {
+            authRepository.login(email, password).onSuccess { uid ->
+                val user = userRepository.getUserByEmail(email)
+                if (user != null) {
+                    _currentUser.value = user
+                    onResult(true, null, user)
+                } else {
+                    onResult(false, "User data not found.", null)
+                }
+            }.onFailure { exception ->
+                when (exception) {
+                    is FirebaseAuthInvalidUserException ->
+                        onResult(false, "No user found with this email.", null)
+                    is FirebaseAuthInvalidCredentialsException ->
+                        onResult(false, "Invalid credentials. Please try again.", null)
+                    else ->
+                        onResult(false, "Unexpected error occurred.", null)
                 }
             }
         }
@@ -168,6 +113,6 @@ class AuthViewModel: ViewModel() {
 
     fun logout(){
         _currentUser.value = null
-        auth.signOut()
+        authRepository.logout()
     }
 }

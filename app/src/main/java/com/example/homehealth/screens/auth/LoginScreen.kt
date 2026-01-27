@@ -72,40 +72,29 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            authViewModel.loginFirebase(email, password) { success, message, user ->
-                if (success && user != null) {
-                    when (user.role){
-                        "public" -> {
-                            navController.navigate("index_screen"){
-                                Log.d("Login", "Success, User ID: $message")
-                                popUpTo("login_screen") {inclusive}
-                            }
-                        }
-                        "caretaker" -> {
-                            Log.d("Login", "Success, User ID: $message")
-                            navController.navigate("index_screen"){
-                                popUpTo("login_screen") {inclusive}
-                            }
-                        }
+            authViewModel.login(email, password) { isSuccess, message, user ->
+                if (isSuccess && user != null) {
+                    when (user.role) {
                         "admin" -> {
-                            Log.d("Login", "Success, User ID: $message")
-                            navController.navigate("admin_graph"){
-                                popUpTo("login_screen") {inclusive}
+                            Log.d("Login", "Admin login success, User ID: ${user.uid}")
+                            navController.navigate("admin_graph") {
+                                popUpTo("login_screen") { inclusive = true }
+                            }
+                        }
+                        "public", "caretaker" -> {
+                            Log.d("Login", "${user.role} login success, User ID: ${user.uid}")
+                            navController.navigate("index_screen") {
+                                popUpTo("login_screen") { inclusive = true }
                             }
                         }
                         else -> {
                             authViewModel.logout()
-                            Toast.makeText(
-                                context,
-                                "Unauthorized role",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(context, "Unauthorized role", Toast.LENGTH_SHORT).show()
                         }
                     }
                 } else {
-                    message?.let{
-                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-                    }
+                    Toast.makeText(context, "Login failed: $message", Toast.LENGTH_LONG).show()
+                    Log.e("LoginScreen", "Login failed: $message")
                 }
             }
         },
