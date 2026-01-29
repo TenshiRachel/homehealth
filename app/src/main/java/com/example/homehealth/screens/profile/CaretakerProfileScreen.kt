@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.navigation.NavHostController
 import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.viewmodels.AuthViewModel
+import com.example.homehealth.utils.display
 
 @Composable
 fun CaretakerProfileScreen(
@@ -149,11 +150,13 @@ fun CaretakerProfileContent(profile: CaretakerProfile) {
                 Text("Details", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                ProfileDetailRow("Gender", profile.gender)
-                ProfileDetailRow("Age", "${profile.age} years")
-                ProfileDetailRow("Experience", "${profile.yearsOfExperience} years")
-                ProfileDetailRow("Type", profile.caretakerType.name.replace("_", " "))
-                ProfileDetailRow("Availability", profile.availabilityType.name.replace("_", " "))
+                ProfileDetailRow("Gender", profile.gender.display())
+                ProfileDetailRow("Age",
+                    if (profile.age > 0) "${profile.age} years" else "Not specified")
+                ProfileDetailRow("Experience", if (profile.yearsOfExperience > 0)
+                    "${profile.yearsOfExperience} years" else "Not specified")
+                ProfileDetailRow("Type", profile.caretakerType.display())
+                ProfileDetailRow("Availability", profile.availabilityType.display())
                 ProfileDetailRow("Night Care", if (profile.nightCare) "Available" else "Not Available")
             }
         }
@@ -161,7 +164,13 @@ fun CaretakerProfileContent(profile: CaretakerProfile) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Skills Section
-        if (profile.skills.isNotEmpty()) {
+        if (profile.skills.isEmpty()) {
+            Text(
+                "No skills added yet",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {

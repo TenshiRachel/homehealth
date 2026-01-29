@@ -21,16 +21,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.input.KeyboardType
 import com.example.homehealth.data.models.CaretakerDetails
 import com.example.homehealth.data.models.Certification
+import com.example.homehealth.data.enums.Gender
+import com.example.homehealth.ui.textfield.EnumDropdownField
+import com.example.homehealth.ui.textfield.ItemDropdownField
+import com.example.homehealth.ui.textfield.TextField2
+import com.example.homehealth.ui.textfield.TextFieldWithLabel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateCaretakerScreen(
     navController: NavHostController,
@@ -40,13 +42,13 @@ fun CreateCaretakerScreen(
     val DEFAULT_PASSWORD = "password123"
 
     var email by remember { mutableStateOf("") }
-//    var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("") }
     var yearsOfExp by remember { mutableStateOf("") }
+
+    var selectedGender by remember { mutableStateOf(Gender.UNSPECIFIED) }
+
     var selectedCert by remember { mutableStateOf<Certification?>(null) }
-    var expanded by remember { mutableStateOf(false) }
 
     val certifications by certificationViewModel.certifications
     val isLoading by adminViewModel.isLoading
@@ -63,81 +65,49 @@ fun CreateCaretakerScreen(
     ) {
         Text("Create Caretaker Account", style = MaterialTheme.typography.headlineSmall)
 
-        OutlinedTextField(
+        TextField2(
+            label = "Name",
             value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            modifier = Modifier.fillMaxWidth()
+            onValueChange = { name = it }
         )
 
-        OutlinedTextField(
+        TextField2(
+            label = "Email",
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
 
-//        OutlinedTextField(
-//            value = password,
-//            onValueChange = { password = it },
-//            label = { Text("Password") },
-//            visualTransformation = PasswordVisualTransformation(),
-//            placeholder = { Text(DEFAULT_PASSWORD) },
-//            modifier = Modifier.fillMaxWidth()
-//        )
-
-        OutlinedTextField(
+        TextField2(
+            label = "Age",
             value = age,
-            onValueChange = { age = it },
-            label = { Text("Age") },
-            modifier = Modifier.fillMaxWidth()
+            onValueChange = { if (it.all(Char::isDigit)) age = it },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
-        OutlinedTextField(
-            value = gender,
-            onValueChange = { gender = it },
-            label = { Text("Gender") },
-            modifier = Modifier.fillMaxWidth()
+
+        EnumDropdownField(
+            label = "Gender",
+            selectedValue = selectedGender,
+            values = Gender.values(),
+            exclude = { it == Gender.UNSPECIFIED },
+            onValueSelected = { selectedGender = it }
         )
-        OutlinedTextField(
+
+        TextField2(
+            label = "Years of Experience",
             value = yearsOfExp,
-            onValueChange = { yearsOfExp = it },
-            label = { Text("Years of Experience") },
-            modifier = Modifier.fillMaxWidth()
+            onValueChange = { if (it.all(Char::isDigit)) yearsOfExp = it },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
         Text("Certifications", style = MaterialTheme.typography.titleMedium)
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            OutlinedTextField(
-                value = selectedCert?.name ?: "",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Certification") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                },
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                certifications.forEach { cert ->
-                    DropdownMenuItem(
-                        text = { Text(cert.name) },
-                        onClick = {
-                            selectedCert = cert
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
+        ItemDropdownField(
+            label = "Certification",
+            items = certifications,
+            selectedItem = selectedCert,
+            onItemSelected = { selectedCert = it },
+            itemLabel = { it.name }
+        )
 
         Button(
             modifier = Modifier.fillMaxWidth(),
@@ -146,7 +116,7 @@ fun CreateCaretakerScreen(
                 if (
                     name.isBlank() ||
                     email.isBlank() ||
-                    gender.isBlank() ||
+                    selectedGender == Gender.UNSPECIFIED ||
                     age.isBlank() ||
                     yearsOfExp.isBlank() ||
                     selectedCert == null
@@ -156,10 +126,10 @@ fun CreateCaretakerScreen(
                 }
 
                 val details = CaretakerDetails(
-                    gender = gender,
+                    gender = selectedGender,
                     age = age.toIntOrNull() ?: 0,
                     yearsOfExperience = yearsOfExp.toIntOrNull() ?: 0,
-                    certificationIds = selectedCert?.let { listOf(it.id) } ?: emptyList()
+                    certificationIds = listOf(selectedCert!!.id)
                 )
 
                 adminViewModel.createCaretakerAccount(
