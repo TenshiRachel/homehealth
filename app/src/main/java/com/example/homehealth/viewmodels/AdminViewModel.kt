@@ -9,13 +9,12 @@ import com.example.homehealth.data.models.CaretakerDetails
 import com.example.homehealth.data.models.User
 import com.example.homehealth.data.repository.UserRepository
 import com.example.homehealth.data.repository.AuthRepository
-import com.example.homehealth.data.repository.CaretakerDetailsRepository
 import kotlinx.coroutines.launch
 
 class AdminViewModel : ViewModel() {
     private val authRepository = AuthRepository()
     private val userRepository = UserRepository()
-    private val caretakerDetailsRepository = CaretakerDetailsRepository()
+//    private val caretakerDetailsRepository = CaretakerDetailsRepository()
     private val _currentAdmin = mutableStateOf<User?>(null)
     val currentAdmin: State<User?> = _currentAdmin
 
@@ -75,24 +74,18 @@ class AdminViewModel : ViewModel() {
                         uid = uid,
                         email = cleanEmail,
                         name = cleanName,
-                        role = "caretaker"
+                        role = "caretaker",
+                        caretakerDetails = details.copy(uid = uid)
                     )
-                    val isCaretakerRegistered = userRepository.createUser(user)
+                    val success = userRepository.createUser(user)
 
-                    if (!isCaretakerRegistered) {
+                    if (!success) {
                         onResult(false, "Failed to create user profile")
                         return@launch
                     }
-                    // 3. Create caretaker details
-                    val isCaretakerCreated = caretakerDetailsRepository.createCaretakerProfile(
-                        details.copy(uid = uid)
-                    )
-                    if (!isCaretakerCreated) {
-                        onResult(false, "Failed to create caretaker profile")
-                        return@launch
-                    }
+
                     onResult(true, "Caretaker account created successfully")
-                    loadAllUsers() // Refresh the list
+                    loadAllUsers()
                 }.onFailure { exception ->
                     when (exception) {
                         is FirebaseAuthUserCollisionException ->

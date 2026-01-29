@@ -2,7 +2,6 @@ package com.example.homehealth.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.example.homehealth.data.repository.UserRepository
-import com.example.homehealth.data.repository.CaretakerDetailsRepository
 import com.example.homehealth.data.repository.SkillRepository
 import com.example.homehealth.data.repository.CertificationRepository
 import com.example.homehealth.data.models.CaretakerProfile
@@ -14,7 +13,7 @@ import androidx.lifecycle.viewModelScope
 
 class CaretakerViewModel : ViewModel() {
     private val userRepository = UserRepository()
-    private val caretakerDetailsRepository = CaretakerDetailsRepository()
+//    private val caretakerDetailsRepository = CaretakerDetailsRepository()
     private val skillRepository = SkillRepository()
     private val certificationRepository = CertificationRepository()
 
@@ -35,35 +34,38 @@ class CaretakerViewModel : ViewModel() {
             try {
                 // Fetch user info
                 val user = userRepository.getUserById(caretakerUid)
+                val details = user?.caretakerDetails
 
-                // Fetch caretaker details
-                val details = caretakerDetailsRepository.getCaretakerProfileByUid(caretakerUid)
-
-                if (user != null && details != null) {
-                    // Fetch skills and certifications
-//                    val skills = skillRepository.getSkillsByCaretakerId(caretakerUid)
-                    val certifications = details.certificationIds.mapNotNull { certId ->
-                        certificationRepository.getCertificationById(certId)
-                    }
-
-                    // Combine into CaretakerProfile
-                    _caretakerProfile.value = CaretakerProfile(
-                        uid = user.uid,
-                        name = user.name,
-                        email = user.email,
-                        bio = user.bio ?: "", // assuming User has bio field
-                        gender = details.gender,
-                        age = details.age,
-                        yearsOfExperience = details.yearsOfExperience,
-                        caretakerType = details.caretakerType,
-                        availabilityType = details.availabilityType,
-                        nightCare = details.nightCare,
-                        skills = emptyList(), //skills,
-                        certifications = certifications
-                    )
-                } else {
-                    _error.value = "Caretaker not found"
+                if (user == null || details == null) {
+                    _error.value = "Caretaker profile incomplete"
+                    return@launch
                 }
+
+                // Resolve certifications (admin assigned)
+                val certifications = details.certificationIds.mapNotNull { certId ->
+                    certificationRepository.getCertificationById(certId)
+                }
+
+                // Resolve skills (caretaker assigned)
+                val skills = details.skillIds.mapNotNull { skillId ->
+                    skillRepository.getSkillById(skillId)
+                }
+
+                // Combine into CaretakerProfile
+                _caretakerProfile.value = CaretakerProfile(
+                    uid = user.uid,
+                    name = user.name,
+                    email = user.email,
+                    bio = user.bio ?: "",
+                    gender = details.gender,
+                    age = details.age,
+                    yearsOfExperience = details.yearsOfExperience,
+                    caretakerType = details.caretakerType,
+                    availabilityType = details.availabilityType,
+                    nightCare = details.nightCare,
+                    skills = skills,
+                    certifications = certifications
+                    )
             } catch (e: Exception) {
                 _error.value = e.message ?: "Unknown error occurred"
             } finally {
