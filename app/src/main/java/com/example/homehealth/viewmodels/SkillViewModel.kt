@@ -6,13 +6,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.homehealth.data.models.Skill
 import com.example.homehealth.data.repository.SkillRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class SkillViewModel : ViewModel() {
     private val skillRepository = SkillRepository()
 
-    private val _skills = mutableStateOf<List<Skill>>(emptyList())
-    val skills: State<List<Skill>> = _skills
+    private val _skills = MutableStateFlow<List<Skill>>(emptyList())
+    val skills: StateFlow<List<Skill>> = _skills
 
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> = _isLoading

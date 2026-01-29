@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.homehealth.data.models.CaretakerDetails
 import com.example.homehealth.data.models.Certification
@@ -31,7 +32,6 @@ import com.example.homehealth.data.enums.Gender
 import com.example.homehealth.ui.textfield.EnumDropdownField
 import com.example.homehealth.ui.textfield.ItemDropdownField
 import com.example.homehealth.ui.textfield.TextField2
-import com.example.homehealth.ui.textfield.TextFieldWithLabel
 
 @Composable
 fun CreateCaretakerScreen(
@@ -50,7 +50,7 @@ fun CreateCaretakerScreen(
 
     var selectedCert by remember { mutableStateOf<Certification?>(null) }
 
-    val certifications by certificationViewModel.certifications
+    val certifications by certificationViewModel.certifications.collectAsState()
     val isLoading by adminViewModel.isLoading
 
     LaunchedEffect(Unit) {

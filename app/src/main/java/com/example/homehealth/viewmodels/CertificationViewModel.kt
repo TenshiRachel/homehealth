@@ -6,13 +6,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.homehealth.data.models.Certification
 import com.example.homehealth.data.repository.CertificationRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class CertificationViewModel : ViewModel() {
     private val certificationRepository = CertificationRepository()
 
-    private val _certifications = mutableStateOf<List<Certification>>(emptyList())
-    val certifications: State<List<Certification>> = _certifications
+    private val _certifications = MutableStateFlow<List<Certification>>(emptyList())
+    val certifications: StateFlow<List<Certification>> = _certifications
 
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> = _isLoading
