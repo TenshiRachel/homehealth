@@ -39,13 +39,14 @@ import com.example.homehealth.viewmodels.CertificationViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun ManageCertificationScreen(
     navController: NavHostController,
     certificationViewModel: CertificationViewModel = viewModel(),
 ) {
-    val certifications by certificationViewModel.certifications
+    val certifications by certificationViewModel.certifications.collectAsState()
     val isLoading by certificationViewModel.isLoading
     val errorMessage by certificationViewModel.errorMessage
 

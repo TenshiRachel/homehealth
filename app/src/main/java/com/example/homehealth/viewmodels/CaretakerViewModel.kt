@@ -10,10 +10,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
+import com.example.homehealth.data.enums.AvailabilityType
+import com.example.homehealth.data.enums.CaretakerType
 
 class CaretakerViewModel : ViewModel() {
     private val userRepository = UserRepository()
-//    private val caretakerDetailsRepository = CaretakerDetailsRepository()
     private val skillRepository = SkillRepository()
     private val certificationRepository = CertificationRepository()
 
@@ -22,6 +23,9 @@ class CaretakerViewModel : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
@@ -73,4 +77,62 @@ class CaretakerViewModel : ViewModel() {
             }
         }
     }
+
+    fun updateCaretakerProfile(
+        bio: String,
+        caretakerType: CaretakerType,
+        availabilityType: AvailabilityType,
+        nightCare: Boolean,
+        skillIds: List<String>,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        val currentProfile = _caretakerProfile.value
+
+        if (currentProfile == null) {
+            onResult(false, "Profile not loaded")
+            return
+        }
+
+        viewModelScope.launch {
+            _isSaving.value = true
+            _error.value = null
+
+            try {
+                // Fetch latest user to avoid overwriting admin fields
+                val user = userRepository.getUserById(currentProfile.uid)
+                    ?: throw Exception("User not found")
+
+                val existingDetails = user.caretakerDetails
+                    ?: throw Exception("Caretaker details missing")
+
+                // Merge ONLY caretaker-owned fields
+                val updatedDetails = existingDetails.copy(
+                    caretakerType = caretakerType,
+                    availabilityType = availabilityType,
+                    nightCare = nightCare,
+                    skillIds = skillIds
+                )
+
+                val updatedUser = user.copy(
+                    bio = bio,
+                    caretakerDetails = updatedDetails
+                )
+
+                val success = userRepository.updateUser(updatedUser)
+
+                if (success) {
+                    // Refresh local profile after save
+                    loadCaretakerProfile(user.uid)
+                    onResult(true, null)
+                } else {
+                    onResult(false, "Failed to update profile")
+                }
+            } catch (e: Exception) {
+                onResult(false, e.message ?: "Unknown error")
+            } finally {
+                _isSaving.value = false
+            }
+        }
+    }
+
 }

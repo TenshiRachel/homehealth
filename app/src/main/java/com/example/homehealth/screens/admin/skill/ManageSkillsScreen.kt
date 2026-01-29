@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.IconButton
+import androidx.compose.runtime.collectAsState
 import com.example.homehealth.data.models.Skill
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +44,7 @@ fun ManageSkillsScreen(
     navController: NavHostController,
     skillViewModel: SkillViewModel = viewModel(),
 ) {
-    val skills by skillViewModel.skills
+    val skills by skillViewModel.skills.collectAsState()
     val isLoading by skillViewModel.isLoading
 
     var skillToEdit by remember { mutableStateOf<Skill?>(null) }

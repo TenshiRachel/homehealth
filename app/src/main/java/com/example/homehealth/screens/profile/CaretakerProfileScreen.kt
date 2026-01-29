@@ -43,17 +43,17 @@ import com.example.homehealth.utils.display
 @Composable
 fun CaretakerProfileScreen(
     navController: NavHostController,
-    caretakerProfileViewModel: CaretakerViewModel = viewModel(),
+    caretakerViewModel: CaretakerViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
-    val profile by caretakerProfileViewModel.caretakerProfile.collectAsState()
-    val isLoading by caretakerProfileViewModel.isLoading.collectAsState()
-    val error by caretakerProfileViewModel.error.collectAsState()
+    val profile by caretakerViewModel.caretakerProfile.collectAsState()
+    val isLoading by caretakerViewModel.isLoading.collectAsState()
+    val error by caretakerViewModel.error.collectAsState()
     val sessionUser = authViewModel.currentUser.value
 
     LaunchedEffect(sessionUser) {
         sessionUser?.uid?.let { userId ->
-            caretakerProfileViewModel.loadCaretakerProfile(userId)
+            caretakerViewModel.loadCaretakerProfile(userId)
         }
     }
 
@@ -68,7 +68,14 @@ fun CaretakerProfileScreen(
     }
 
     Scaffold(
-        bottomBar = { BottomNavBar(navController, sessionUser.uid, sessionUser.role) }
+        bottomBar = { BottomNavBar(navController, sessionUser.uid, sessionUser.role) },
+        floatingActionButton = {
+            Button(
+                onClick = { navController.navigate("edit_caretaker_profile_screen") }
+            ) {
+                Text("Edit Profile")
+            }
+        }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -92,7 +99,7 @@ fun CaretakerProfileScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = {
-                            sessionUser.uid.let { caretakerProfileViewModel.loadCaretakerProfile(it) }
+                            sessionUser.uid.let { caretakerViewModel.loadCaretakerProfile(it) }
                         }) {
                             Text("Retry")
                         }
@@ -129,18 +136,25 @@ fun CaretakerProfileContent(profile: CaretakerProfile) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Bio
-        if (profile.bio.isNotEmpty()) {
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("About", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(profile.bio, style = MaterialTheme.typography.bodyMedium)
-                }
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("About", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = profile.bio.ifEmpty { "No bio provided" },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (profile.bio.isEmpty())
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    else
+                        MaterialTheme.colorScheme.onSurface
+                )
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Details Section
         Card(

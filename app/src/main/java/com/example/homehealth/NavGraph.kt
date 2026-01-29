@@ -20,6 +20,7 @@ import com.example.homehealth.screens.admin.adminGraph
 import com.example.homehealth.screens.appointment.AppointmentDetailsScreen
 import com.example.homehealth.screens.appointment.BrowseCaretakerScreen
 import com.example.homehealth.screens.profile.CaretakerProfileScreen
+import com.example.homehealth.screens.profile.EditCaretakerProfileScreen
 import com.example.homehealth.screens.profile.EditProfileScreen
 import com.example.homehealth.viewmodels.CaretakerViewModel
 import com.example.homehealth.viewmodels.ChatListViewModel
@@ -27,6 +28,7 @@ import com.example.homehealth.viewmodels.ChatViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
 import com.example.homehealth.viewmodels.ScheduleViewModel
+import com.example.homehealth.viewmodels.SkillViewModel
 
 
 @Composable
@@ -83,10 +85,10 @@ fun NavGraph(
             val rootEntry = remember(backStackEntry) {
                 navController.getBackStackEntry(navController.graph.id)
             }
-            val caretakerProfileViewModel: CaretakerViewModel = viewModel(rootEntry)
+            val caretakerViewModel: CaretakerViewModel = viewModel(rootEntry)
             val authViewModel: AuthViewModel = viewModel(rootEntry)
 
-            CaretakerProfileScreen(navController, caretakerProfileViewModel, authViewModel)
+            CaretakerProfileScreen(navController, caretakerViewModel, authViewModel)
         }
 
         composable("edit_profile_screen") { backStackEntry ->
@@ -97,6 +99,16 @@ fun NavGraph(
             val authViewModel: AuthViewModel = viewModel(rootEntry)
 
             EditProfileScreen(navController, profileViewModel, authViewModel)
+        }
+
+        composable("edit_caretaker_profile_screen") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+            val caretakerViewModel : CaretakerViewModel = viewModel(rootEntry)
+            val skillViewModel : SkillViewModel = viewModel(rootEntry)
+
+            EditCaretakerProfileScreen(navController, caretakerViewModel, skillViewModel)
         }
 
         // Browsing made by patient/public
