@@ -4,7 +4,7 @@ import android.util.Log
 import com.example.homehealth.data.models.chat.Chat
 import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.models.chat.Message
-import com.example.homehealth.data.models.chat.MessageType
+import com.example.homehealth.data.enums.MessageType
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await

@@ -2,6 +2,12 @@ package com.example.homehealth.screens.chat
 
 import android.Manifest
 import android.app.Application
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +26,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +52,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,7 +61,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.homehealth.data.models.chat.Message
-import com.example.homehealth.data.models.chat.MessageType
+import com.example.homehealth.data.enums.MessageType
 import com.example.homehealth.utils.formatTimestamp
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ChatViewModel
@@ -96,6 +111,19 @@ fun ChatScreen(navController: NavHostController,
 
     val otherUser = chat!!.members.first { it.uid != sessionUser.uid }
 
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            chatViewmodel.sendImage(
+                chatId = chatId,
+                senderId = sessionUser.uid,
+                recipientId = otherUser.uid,
+                imageUri = it
+            )
+        }
+    }
+
     Scaffold(
         topBar = {
             ChatTopBar(
@@ -117,6 +145,11 @@ fun ChatScreen(navController: NavHostController,
                         )
                         messageText = ""
                     }
+                },
+                onPickImage = {
+                    imagePicker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
                 },
                 onShareLocation = {
                     if (permissionState.status.isGranted) {
@@ -179,8 +212,11 @@ fun ChatInputBar(
     text: String,
     onTextChange: (String) -> Unit,
     onSend: () -> Unit,
+    onPickImage: () -> Unit,
     onShareLocation: () -> Unit
 ) {
+    var showAttachmentMenu by remember { mutableStateOf(false) }
+
     Surface(shadowElevation = 8.dp) {
         Row(
             modifier = Modifier
@@ -188,14 +224,44 @@ fun ChatInputBar(
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onShareLocation
-            ) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Share Location"
-                )
+
+            Box {
+                IconButton(onClick = { showAttachmentMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Outlined.AttachFile,
+                        contentDescription = "Attach"
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showAttachmentMenu,
+                    onDismissRequest = { showAttachmentMenu = false }
+                ) {
+
+                    DropdownMenuItem(
+                        text = { Text("Image") },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.Image, contentDescription = null)
+                        },
+                        onClick = {
+                            showAttachmentMenu = false
+                            onPickImage()
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text("Location") },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.LocationOn, contentDescription = null)
+                        },
+                        onClick = {
+                            showAttachmentMenu = false
+                            onShareLocation()
+                        }
+                    )
+                }
             }
+
             TextField(
                 value = text,
                 onValueChange = onTextChange,
@@ -222,6 +288,12 @@ fun ChatBubble(
     message: Message,
     isOwnMessage: Boolean
 ) {
+    val isExpired = remember(message.expiresAt) {
+        message.expiresAt?.let {
+            System.currentTimeMillis() > it
+        } ?: false
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -253,17 +325,39 @@ fun ChatBubble(
                     }
 
                     MessageType.LOCATION -> {
-                        val lat = message.payload.latitude ?: 0.0
-                        val long = message.payload.longitude ?: 0.0
-
-                        LocationPreview(
-                            latitude = lat,
-                            longitude = long
-                        )
+                        if (isExpired) {
+                            Text(
+                                text = "Location expired",
+                                modifier = Modifier.padding(12.dp),
+                                color = Color.Gray
+                            )
+                        } else {
+                            LocationPreview(
+                                latitude = message.payload.latitude!!,
+                                longitude = message.payload.longitude!!
+                            )
+                        }
                     }
 
                     MessageType.IMAGE -> {
+                        // Decode bitmap only when the base64 changes
+                        val bitmap = remember(message.payload.imageBase64) {
+                            message.payload.imageBase64?.let { base64 ->
+                                val bytes = Base64.decode(base64, Base64.DEFAULT)
+                                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            }
+                        }
 
+                        bitmap?.let {
+                            Image(
+                                bitmap = it.asImageBitmap(),
+                                contentDescription = "Image message",
+                                modifier = Modifier
+                                    .size(200.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     }
                 }
             }
@@ -291,7 +385,7 @@ fun LocationPreview(
 
     GoogleMap(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(0.75f)
             .height(180.dp)
             .clip(RoundedCornerShape(12.dp)),
         cameraPositionState = cameraPositionState,

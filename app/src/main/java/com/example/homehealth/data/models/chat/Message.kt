@@ -1,16 +1,14 @@
 package com.example.homehealth.data.models.chat
 
-enum class MessageType {
-    TEXT,
-    LOCATION,
-    IMAGE
-}
+import com.example.homehealth.data.enums.MessageType
 
 data class MessagePayload(
     val text: String? = null,
 
     val longitude: Double? = null,
     val latitude: Double? = null,
+
+    val imageBase64: String? = null
 )
 
 data class Message(
@@ -19,6 +17,7 @@ data class Message(
     val senderId: String = "",
     val recipientId: String = "",
     val timestamp: Long = System.currentTimeMillis(),
+    val expiresAt: Long? = null,
 
     val type: MessageType = MessageType.TEXT,
     val payload: MessagePayload = MessagePayload()
