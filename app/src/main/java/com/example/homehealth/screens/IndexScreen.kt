@@ -142,7 +142,8 @@ fun IndexScreen(
             if (appointments.isEmpty()) {
                 Text("You have no appointments yet.")
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier
+                    .height(8.dp))
 
                 Button(
                     onClick = { navController.navigate("browse_caretaker_screen") }
