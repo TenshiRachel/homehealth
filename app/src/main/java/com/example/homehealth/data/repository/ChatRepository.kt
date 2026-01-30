@@ -4,6 +4,7 @@ import com.example.homehealth.data.dao.ChatDao
 import com.example.homehealth.data.models.chat.Chat
 import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.models.chat.Message
+import kotlinx.coroutines.flow.Flow
 
 class ChatRepository (private val chatDao: ChatDao = ChatDao()) {
     suspend fun startChat(user1Id: ChatUser, user2Id: ChatUser): String {
@@ -22,7 +23,7 @@ class ChatRepository (private val chatDao: ChatDao = ChatDao()) {
         return chatDao.getUserChats(userId)
     }
 
-    suspend fun getMessagesByChat(chatId: String): List<Message>{
+    fun getMessagesByChat(chatId: String): Flow<List<Message>> {
         return chatDao.getMessagesByChat(chatId)
     }
 }

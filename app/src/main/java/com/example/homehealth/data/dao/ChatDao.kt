@@ -7,6 +7,9 @@ import com.example.homehealth.data.models.chat.Message
 import com.example.homehealth.data.enums.MessageType
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class ChatDao {
@@ -95,19 +98,21 @@ class ChatDao {
         return snapshot.toObjects(Chat::class.java)
     }
 
-    suspend fun getMessagesByChat(chatId: String): List<Message> {
-        return try {
-            val snapshot = db.collection(CHATS_COLLECTION)
-                .document(chatId)
-                .collection(MESSAGES_COLLECTION)
-                .orderBy("timestamp") // very important
-                .get()
-                .await()
+    fun getMessagesByChat(chatId: String): Flow<List<Message>> = callbackFlow {
+        val listener = db.collection(CHATS_COLLECTION)
+            .document(chatId)
+            .collection(MESSAGES_COLLECTION)
+            .orderBy("timestamp")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
 
-            snapshot.toObjects(Message::class.java)
-        } catch (e: Exception) {
-            Log.e("ChatRepo", "Failed to load messages", e)
-            emptyList()
-        }
+                val messages = snapshot?.toObjects(Message::class.java) ?: emptyList()
+                trySend(messages)
+            }
+
+        awaitClose { listener.remove() }
     }
 }

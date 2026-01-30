@@ -14,6 +14,7 @@ import com.example.homehealth.data.enums.MessageType
 import com.example.homehealth.data.repository.ChatRepository
 import com.example.homehealth.utils.LocationProvider
 import com.example.homehealth.utils.compressImageToBase64
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
@@ -23,9 +24,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _chat = MutableLiveData<Chat>()
     val chat: LiveData<Chat> = _chat
 
-    private val _messages = MutableLiveData<List<Message>>()
-    val messages: LiveData<List<Message>> = _messages
-
     fun fetchChat(chatId: String){
         viewModelScope.launch {
             val fetchedChat = chatRepository.getChatById(chatId)
@@ -33,11 +31,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun fetchMessages(chatId: String){
-        viewModelScope.launch {
-            val fetchedMessages = chatRepository.getMessagesByChat(chatId)
-            _messages.postValue(fetchedMessages)
-        }
+    fun fetchMessages(chatId: String): Flow<List<Message>> {
+        return chatRepository.getMessagesByChat(chatId)
     }
 
      fun sendMessage(chatId: String, senderId: String, recipientId: String, text: String){

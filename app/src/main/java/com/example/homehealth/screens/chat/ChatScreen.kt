@@ -18,14 +18,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.LocationOn
@@ -43,6 +41,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -88,7 +87,7 @@ fun ChatScreen(navController: NavHostController,
     val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     val chat by chatViewmodel.chat.observeAsState(null)
-    val messages by chatViewmodel.messages.observeAsState(emptyList())
+    val messages by chatViewmodel.fetchMessages(chatId).collectAsState(initial = emptyList())
 
     val sessionUser = authViewModel.currentUser.value
 
