@@ -19,6 +19,7 @@ import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.screens.admin.adminGraph
 import com.example.homehealth.screens.appointment.AppointmentDetailsScreen
 import com.example.homehealth.screens.appointment.BrowseCaretakerScreen
+import com.example.homehealth.screens.appointment.CaretakerDetailsScreen
 import com.example.homehealth.screens.profile.CaretakerProfileScreen
 import com.example.homehealth.screens.profile.EditCaretakerProfileScreen
 import com.example.homehealth.screens.profile.EditProfileScreen
@@ -120,6 +121,17 @@ fun NavGraph(
             val scheduleViewModel: ScheduleViewModel = viewModel(rootEntry)
             val authViewModel: AuthViewModel = viewModel(rootEntry)
             BrowseCaretakerScreen(navController, authViewModel, scheduleViewModel)
+        }
+
+        composable("caretaker_details_screen/{caretakerId}") { backStackEntry ->
+            val rootEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(navController.graph.id)
+            }
+
+            val caretakerId = backStackEntry.arguments?.getString("caretakerId")!!
+            val caretakerViewModel: CaretakerViewModel = viewModel(rootEntry)
+            val authViewModel: AuthViewModel = viewModel(rootEntry)
+            CaretakerDetailsScreen(navController, caretakerId, authViewModel, caretakerViewModel)
         }
 
         composable("appointment_details_screen/{appointmentId}") { backStackEntry ->
