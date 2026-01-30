@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -95,19 +96,33 @@ fun CaretakerLandingScreen(
                 style = MaterialTheme.typography.headlineMedium
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // will implement a filter soon to separate pending, booked and completed appointments
-            Text(
-                text = "Your Appointments",
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             if (appointments.isEmpty()) {
-                Text("You have no appointments yet.")
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "You have no appointments yet.",
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Check back later.",
+                        textAlign = TextAlign.Center
+                    )
+                }
             } else {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Your Appointments",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 AppointmentList(
                     indexViewModel = indexViewModel,
                     sessionUser = sessionUser!!,
