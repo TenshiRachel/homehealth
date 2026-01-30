@@ -2,6 +2,7 @@ package com.example.homehealth.viewmodels
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -54,7 +55,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sendLocation(chatId: String, senderId: String, recipientId: String){
         viewModelScope.launch {
-            val location = locationProvider.getLastLocation() ?: return@launch
+            // val location = locationProvider.getLastLocation() ?: return@launch
+            val location = locationProvider.getCurrentLocation()
+            if (location == null) {
+                Log.e("LocationProvider", "Location is null")
+                return@launch
+            }
 
             val message = Message(
                 chatId = chatId,
