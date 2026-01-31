@@ -53,26 +53,6 @@ fun BottomNavBar(navController: NavHostController, userId: String, role: String)
             }
         )
 
-        if (role == "caretaker"){
-            NavigationBarItem(
-                icon = { Icon(Icons.AutoMirrored.Filled.Assignment, contentDescription = "Requests") },
-                label = { Text("Requests") },
-                selected = navController.currentDestination?.route == "requests_screen/$userId",
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
-                    selectedTextColor = Color.Blue.copy(alpha = 0.5f),
-                    unselectedIconColor = Color.Black,
-                    unselectedTextColor = Color.Black,
-                    indicatorColor = Color.Blue.copy(alpha = 0.5f)
-                ),
-                onClick = {
-                    navController.navigate("requests_screen/$userId") {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-
 //        NavigationBarItem(
 //            icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
 //            label = { Text("Profile") },

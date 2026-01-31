@@ -62,4 +62,46 @@ class ScheduleViewModel : ViewModel() {
         }
     }
 
+    fun markAppointmentCompleted(appointmentId: String) {
+        viewModelScope.launch {
+            try {
+                val appointment = appointmentRepository.getAppointmentDetails(appointmentId)
+                    ?: return@launch
+
+                val updatedAppointment = appointment.copy(
+                    status = "COMPLETED"
+                )
+
+                appointmentRepository.updateAppointment(updatedAppointment)
+
+                // Update UI state
+                _currentAppointment.postValue(updatedAppointment)
+
+            } catch (e: Exception) {
+                Log.e("ScheduleViewModel", "Failed to mark appointment completed", e)
+            }
+        }
+    }
+
+    fun markAppointmentBooked(appointmentId: String) {
+        viewModelScope.launch {
+            try {
+                val appointment = appointmentRepository.getAppointmentDetails(appointmentId)
+                    ?: return@launch
+
+                val updatedAppointment = appointment.copy(
+                    status = "BOOKED"
+                )
+
+                appointmentRepository.updateAppointment(updatedAppointment)
+
+                // Update UI state
+                _currentAppointment.postValue(updatedAppointment)
+
+            } catch (e: Exception) {
+                Log.e("ScheduleViewModel", "Failed to mark appointment booked", e)
+            }
+        }
+    }
+
 }

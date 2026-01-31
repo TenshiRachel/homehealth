@@ -25,6 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +39,7 @@ import com.example.homehealth.data.models.User
 import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.screens.appointment.AppointmentList
 import com.example.homehealth.ui.cards.AppointmentCard
+import com.example.homehealth.utils.FilterChipsRow
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
 
@@ -52,6 +55,13 @@ fun IndexScreen(
     val appointments = indexViewModel.appointments.value
 
     val createdChatId by indexViewModel.createdChatId.collectAsState(null)
+
+    // Filter component
+    val selectedStatus = remember { mutableStateOf<String?>(null) }
+    val statusOptions = listOf("requested", "booked", "completed")
+    val filteredAppointments = appointments.filter { appointment ->
+        selectedStatus.value == null || appointment.status.equals(selectedStatus.value!!, ignoreCase = true)
+    }
 
     LaunchedEffect(createdChatId) {
         createdChatId?.let { chatId ->
@@ -162,10 +172,20 @@ fun IndexScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                FilterChipsRow(
+                    title = "",
+                    options = statusOptions,
+                    selected = selectedStatus.value,
+                    onSelectedChange = { selectedStatus.value = it },
+                    label = { it.replaceFirstChar { c -> c.uppercase() } }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 AppointmentList(
                     indexViewModel = indexViewModel,
                     sessionUser = sessionUser!!,
-                    appointments = appointments,
+                    appointments = filteredAppointments,
                     navController = navController,
                     modifier = Modifier.weight(1f)
                 )
