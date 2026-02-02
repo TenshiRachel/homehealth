@@ -19,17 +19,23 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.example.homehealth.data.enums.MessageType
 import com.example.homehealth.ui.theme.HomeHealthTheme
+import com.example.homehealth.utils.APPOINTMENT_CHANNEL_ID
 import com.example.homehealth.utils.CHAT_CHANNEL_ID
 import com.example.homehealth.utils.NotificationDeduplicator
 import com.example.homehealth.utils.createNotificationChannels
 import com.example.homehealth.utils.showNotification
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ChatViewModel
+import com.example.homehealth.viewmodels.ScheduleViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels {
+        ViewModelProvider.AndroidViewModelFactory(application)
+    }
+
+    private val scheduleViewModel: ScheduleViewModel by viewModels {
         ViewModelProvider.AndroidViewModelFactory(application)
     }
 
@@ -63,6 +69,7 @@ class MainActivity : ComponentActivity() {
                     .collect { user ->
                         if (user != null) {
                             startChatNotifications(user.uid)
+                            startAppointmentNotifications(user.uid, user.role)
                         }
                     }
             }
@@ -105,6 +112,36 @@ class MainActivity : ComponentActivity() {
                         )
                     }
             }
+        }
+    }
+
+    private fun startAppointmentNotifications(userId: String, role: String){
+        lifecycleScope.launch {
+            val isCaretaker = role == "caretaker"
+            scheduleViewModel.observeAppointmentsForRecipient(userId, isCaretaker)
+                .collect { appointments ->
+
+                    val latest = appointments.firstOrNull() ?: return@collect
+
+                    if (!NotificationDeduplicator.shouldNotifyForAppointment(latest.id, latest.status)) return@collect
+
+                    if (isCaretaker && latest.status.equals("REQUESTED", ignoreCase = true)) {
+                        showNotification(
+                            context = this@MainActivity,
+                            channelId = APPOINTMENT_CHANNEL_ID,
+                            title = "New Appointment Request",
+                            body = "Patient '${latest.patientUid}' requested appointment '${latest.name}'"
+                        )
+                    } else if (!isCaretaker && latest.patientUid == userId) {
+                        showNotification(
+                            context = this@MainActivity,
+                            channelId = APPOINTMENT_CHANNEL_ID,
+                            title = "Appointment Update",
+                            body = "Your appointment '${latest.name}' is now '${latest.status}'"
+                        )
+                    }
+
+                }
         }
     }
 }

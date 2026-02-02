@@ -2,14 +2,19 @@ package com.example.homehealth.data.repository
 
 import com.example.homehealth.data.dao.AppointmentDao
 import com.example.homehealth.data.models.Appointment
+import kotlinx.coroutines.flow.Flow
 
 class AppointmentRepository(private val appointmentDao: AppointmentDao = AppointmentDao()) {
     suspend fun createAppointment(appointment: Appointment) : Boolean {
         return appointmentDao.createAppointment(appointment)
     }
 
-    suspend fun getAllAppointments(): List<Appointment> {
-        return appointmentDao.getAllAppointments()
+//    suspend fun getAllAppointments(): List<Appointment> {
+//        return appointmentDao.getAllAppointments()
+//    }
+
+    fun observeAppointmentsForRecipient(recipientUid: String, isCaretaker: Boolean): Flow<List<Appointment>> {
+        return appointmentDao.observeAppointmentsForRecipient(recipientUid, isCaretaker)
     }
 
     suspend fun getAppointmentDetails(appointmentId: String): Appointment? {
