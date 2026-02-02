@@ -6,6 +6,7 @@ import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.models.chat.Message
 import com.example.homehealth.data.enums.MessageType
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -96,6 +97,35 @@ class ChatDao {
             .await()
 
         return snapshot.toObjects(Chat::class.java)
+    }
+
+    fun observeUserChats(userId: String): Flow<List<Message>> = callbackFlow {
+        val listeners = mutableListOf<ListenerRegistration>()
+
+        val chatsListener = db.collection(CHATS_COLLECTION)
+            .whereArrayContains("memberIds", userId)
+            .addSnapshotListener { chatsSnapshot, _ ->
+                chatsSnapshot?.documents?.forEach { chatDoc ->
+                    val chatId = chatDoc.id
+
+                    val listener = db.collection(CHATS_COLLECTION)
+                        .document(chatId)
+                        .collection(MESSAGES_COLLECTION)
+                        .orderBy("timestamp")
+                        .addSnapshotListener{ msgSnapshot, _ ->
+                            val messages = msgSnapshot?.toObjects(Message::class.java) ?: emptyList()
+
+                            trySend(messages)
+                        }
+
+                    listeners.add(listener)
+                }
+            }
+
+        awaitClose{
+            listeners.forEach{ it.remove() }
+            chatsListener.remove()
+        }
     }
 
     fun getMessagesByChat(chatId: String): Flow<List<Message>> = callbackFlow {
