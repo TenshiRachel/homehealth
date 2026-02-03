@@ -72,7 +72,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            authViewModel.login(email, password) { isSuccess, message, user ->
+            authViewModel.login(email, password, context) { isSuccess, message, user ->
                 if (isSuccess && user != null) {
                     when (user.role) {
                         "admin" -> {

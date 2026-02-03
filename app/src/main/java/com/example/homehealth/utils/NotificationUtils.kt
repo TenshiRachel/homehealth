@@ -41,6 +41,7 @@ fun showNotification(
     body: String
 ){
     val notification = NotificationCompat.Builder(context, channelId)
+        .setSmallIcon(R.drawable.ic_notification)
         .setContentTitle(title)
         .setContentText(body)
         .setAutoCancel(true)
