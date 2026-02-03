@@ -1,5 +1,6 @@
 package com.example.homehealth.screens.profile
 
+import android.util.Log
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -77,21 +78,28 @@ fun CaretakerProfileScreen(
             }
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
             when {
                 isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
                 error != null -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = error ?: "Unknown error",
@@ -106,8 +114,30 @@ fun CaretakerProfileScreen(
                     }
                 }
                 profile != null -> {
-                    CaretakerProfileContent(profile = profile!!)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        CaretakerProfileContent(profile = profile!!)
+                    }
                 }
+            }
+            Button(
+                onClick = {
+                    Log.d("ProfileScreen", "Logout button clicked")
+                    authViewModel.logout()
+                    navController.navigate("login_screen") {
+                        popUpTo("auth_graph") {
+                            inclusive = true
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Logout")
             }
         }
     }
@@ -237,6 +267,8 @@ fun CaretakerProfileContent(profile: CaretakerProfile) {
                 }
             }
         }
+        // Add bottom padding to account for logout button
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 

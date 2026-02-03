@@ -8,17 +8,18 @@ import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
 class ProfileViewModel : ViewModel() {
 
     // Source of truth for viewing
     private val userRepository = UserRepository()
 
+    // Profile user state
+    var profileUser = mutableStateOf<User?>(null)
+        private set
+
     // Edit UI state
     private val _editState = MutableStateFlow(EditProfileState())
     val editState: StateFlow<EditProfileState> = _editState
-    var profileUser = mutableStateOf<User?>(null)
-        private set
 
     fun loadProfile(userId: String) {
         viewModelScope.launch {
