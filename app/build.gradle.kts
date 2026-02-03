@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.runtime)
+//    implementation(libs.firebase.storage.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -77,7 +78,11 @@ dependencies {
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
     implementation(libs.google.firebase.firestore)
-    implementation(libs.firebase.auth)
+//    implementation(libs.firebase.auth)
+//    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
 
     // Location
     implementation("com.google.android.gms:play-services-location:21.3.0")
@@ -90,4 +95,10 @@ dependencies {
 
     // Google Maps SDK for Android
     implementation("com.google.android.gms:play-services-maps:20.0.0")
+
+    // Loading images
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    // Coroutine Play Services
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }

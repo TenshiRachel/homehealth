@@ -30,6 +30,10 @@ class AuthViewModel: ViewModel() {
     private val _currentUser = mutableStateOf<User?>(null)
     val currentUser: State<User?> = _currentUser
 
+    // Loading state
+    private val _isLoading = mutableStateOf(false)
+    val isLoading: State<Boolean> = _isLoading
+
     private fun validatePassword(password: String, confirm: String): String? {
         // Check if password is at least 6 characters long
         if (password.length < 6) {
@@ -73,6 +77,8 @@ class AuthViewModel: ViewModel() {
         }
 
         viewModelScope.launch {
+            _isLoading.value = true
+
             // 1. Register to Firebase Auth
             authRepository.register(cleanEmail, cleanPassword).onSuccess { uid ->
                 // 2. Create new user and store to firebase if registered successfully
@@ -95,11 +101,13 @@ class AuthViewModel: ViewModel() {
                         onResult(false, exception.localizedMessage)
                 }
             }
+            _isLoading.value = false
         }
     }
 
     fun login(email: String, password: String, context: Context, onResult: (Boolean, String?, User?) -> Unit) {
         viewModelScope.launch {
+            _isLoading.value = true
             authRepository.login(email, password).onSuccess { uid ->
                 val user = userRepository.getUserByEmail(email)
                 if (user != null) {
@@ -120,6 +128,30 @@ class AuthViewModel: ViewModel() {
                         onResult(false, "Unexpected error occurred.", null)
                 }
             }
+            _isLoading.value = false
+        }
+    }
+
+    // Reset password
+    fun resetPassword(newPassword: String, userId: String, onResult: (Boolean, String?) -> Unit) {
+        val cleanNewPassword = newPassword.trim()
+
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            authRepository.updatePassword(cleanNewPassword).onSuccess {
+                // Clear the password reset flag in Firestore
+                val flagCleared = userRepository.clearPasswordResetFlag(userId)
+                if (flagCleared) {
+                    onResult(true, "Password updated successfully")
+                } else {
+                    onResult(false, "Password updated but failed to clear reset flag")
+                }
+            }.onFailure { exception ->
+                onResult(false, "Failed to update password: ${exception.localizedMessage}")
+            }
+
+            _isLoading.value = false
         }
     }
 

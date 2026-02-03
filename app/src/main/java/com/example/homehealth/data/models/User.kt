@@ -6,7 +6,8 @@ data class User (
     val name: String = "",
     val bio: String = "",
     val role: String = "",
-    val caretakerDetails: CaretakerDetails? = null
+    val caretakerDetails: CaretakerDetails? = null,
+    val requiresPasswordReset: Boolean = false
 )
 
 data class EditProfileState(

@@ -1,5 +1,6 @@
 package com.example.homehealth.viewmodels
 
+import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -9,12 +10,13 @@ import com.example.homehealth.data.models.CaretakerDetails
 import com.example.homehealth.data.models.User
 import com.example.homehealth.data.repository.UserRepository
 import com.example.homehealth.data.repository.AuthRepository
+import com.example.homehealth.data.repository.StorageRepository
 import kotlinx.coroutines.launch
 
 class AdminViewModel : ViewModel() {
     private val authRepository = AuthRepository()
     private val userRepository = UserRepository()
-//    private val caretakerDetailsRepository = CaretakerDetailsRepository()
+    private val storageRepository = StorageRepository()
     private val _currentAdmin = mutableStateOf<User?>(null)
     val currentAdmin: State<User?> = _currentAdmin
 
@@ -54,6 +56,7 @@ class AdminViewModel : ViewModel() {
         password: String,
         name: String,
         details: CaretakerDetails,
+        certPdfUri: Uri?,
         onResult: (Boolean, String?) -> Unit
     ){
         viewModelScope.launch {
@@ -66,8 +69,34 @@ class AdminViewModel : ViewModel() {
             val cleanPassword = password.trim()
 
             try {
+                // Upload certification PDF if provided
+                var pdfUrl: String? = null
+                if (certPdfUri != null) {
+                    val uploadResult = storageRepository.uploadFile(
+                        uri = certPdfUri,
+                        path = "certifications/temp_${System.currentTimeMillis()}.pdf"
+                    )
+                    uploadResult.onSuccess { url ->
+                        pdfUrl = url
+                    }.onFailure {
+                        onResult(false, "Failed to upload PDF: ${it.message}")
+                        _isLoading.value = false
+                        return@launch
+                    }
+                }
+
                 // 1. Create Firebase Auth account
                 authRepository.register(cleanEmail, cleanPassword).onSuccess { uid ->
+
+                    // Attach PDF URL to caretaker details if uploaded
+                    val updatedDetails = if (pdfUrl != null && details.certificationIds.isNotEmpty()) {
+                        details.copy(
+                            uid = uid,
+                            certificationProofs = mapOf(details.certificationIds.first() to pdfUrl!!)
+                        )
+                    } else {
+                        details.copy(uid = uid)
+                    }
 
                     // 2. Create User document
                     val user = User(
@@ -75,7 +104,8 @@ class AdminViewModel : ViewModel() {
                         email = cleanEmail,
                         name = cleanName,
                         role = "caretaker",
-                        caretakerDetails = details.copy(uid = uid)
+                        caretakerDetails = updatedDetails, 
+                        requiresPasswordReset = true // Set flag for first-time login
                     )
                     val success = userRepository.createUser(user)
 

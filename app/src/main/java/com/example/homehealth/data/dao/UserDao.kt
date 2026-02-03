@@ -92,4 +92,16 @@ class UserDao {
             false
         }
     }
+
+    suspend fun clearPasswordResetFlag(uid: String): Boolean {
+        return try {
+            db.collection("users")
+                .document(uid)
+                .update("requiresPasswordReset", false)
+                .await()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 }
