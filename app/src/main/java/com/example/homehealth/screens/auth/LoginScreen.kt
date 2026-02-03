@@ -115,7 +115,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            authViewModel.login(email, password) { isSuccess, message, user ->
+            authViewModel.login(email, password, context) { isSuccess, message, user ->
                 if (isSuccess && user != null) {
                     Log.e("LoginScreen", "User logged in: ${user.email}")
                     Log.e("LoginScreen", "User role: ${user.role}")

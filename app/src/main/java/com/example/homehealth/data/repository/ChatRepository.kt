@@ -23,6 +23,10 @@ class ChatRepository (private val chatDao: ChatDao = ChatDao()) {
         return chatDao.getUserChats(userId)
     }
 
+    fun observeUserChats(userId: String): Flow<List<Message>> {
+        return chatDao.observeUserChats(userId)
+    }
+
     fun getMessagesByChat(chatId: String): Flow<List<Message>> {
         return chatDao.getMessagesByChat(chatId)
     }

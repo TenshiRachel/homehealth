@@ -3,7 +3,11 @@ package com.example.homehealth.data.dao
 import android.util.Log
 import com.example.homehealth.data.models.Appointment
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class AppointmentDao {
@@ -96,7 +100,6 @@ class AppointmentDao {
                 .document(appointment.id)
                 .set(appointment, SetOptions.merge())
                 .await()
-
             true
         } catch (e: Exception) {
             Log.e("AppointmentDao", "Failed to update appointment", e)
@@ -116,5 +119,22 @@ class AppointmentDao {
             Log.e("AppointmentDao", "Failed to delete appointment", e)
             false
         }
+    }
+
+    fun observeAppointmentsForRecipient(recipientUid: String, isCaretaker: Boolean): Flow<List<Appointment>> = callbackFlow {
+        val query = if (isCaretaker) {
+            db.collection(APPOINTMENTS_COLLECTION)
+                .whereEqualTo("caretakerUid", recipientUid)
+        } else {
+            db.collection(APPOINTMENTS_COLLECTION)
+                .whereEqualTo("patientUid", recipientUid)
+        }
+
+        val listener = query.addSnapshotListener { snapshot, _ ->
+            val appointments = snapshot?.toObjects(Appointment::class.java) ?: emptyList()
+            trySend(appointments)
+        }
+
+        awaitClose { listener.remove() }
     }
 }
