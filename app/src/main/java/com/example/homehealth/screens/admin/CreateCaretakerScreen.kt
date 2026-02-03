@@ -1,5 +1,8 @@
 package com.example.homehealth.screens.admin
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.navigation.NavHostController
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,6 +55,14 @@ fun CreateCaretakerScreen(
 
     val certifications by certificationViewModel.certifications.collectAsState()
     val isLoading by adminViewModel.isLoading
+    var selectedPdfUri by remember { mutableStateOf<Uri?>(null) }
+
+    val pdfPickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            selectedPdfUri = uri
+        }
 
     LaunchedEffect(Unit) {
         certificationViewModel.loadCertifications()
@@ -108,6 +119,19 @@ fun CreateCaretakerScreen(
             onItemSelected = { selectedCert = it },
             itemLabel = { it.name }
         )
+        Button(
+            onClick = {
+                pdfPickerLauncher.launch(arrayOf("application/pdf"))
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                if (selectedPdfUri == null)
+                    "Select Certification PDF"
+                else
+                    "PDF Selected: ${selectedPdfUri!!.lastPathSegment}"
+            )
+        }
 
         Button(
             modifier = Modifier.fillMaxWidth(),
@@ -136,7 +160,8 @@ fun CreateCaretakerScreen(
                     email = email,
                     password = DEFAULT_PASSWORD,
                     name = name,
-                    details = details
+                    details = details,
+                    certPdfUri = selectedPdfUri,
                 ) { success, _ ->
                     if (success) {
                         navController.popBackStack()

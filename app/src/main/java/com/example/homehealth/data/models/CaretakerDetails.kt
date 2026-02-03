@@ -13,5 +13,6 @@ data class CaretakerDetails(
     val availabilityType: AvailabilityType = AvailabilityType.UNKNOWN,
     val nightCare: Boolean = false,
     val certificationIds: List<String> = emptyList(),
+    val certificationProofs: Map<String, String> = emptyMap(),
     val skillIds: List<String> = emptyList()
 )
