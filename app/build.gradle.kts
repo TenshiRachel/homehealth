@@ -90,4 +90,7 @@ dependencies {
 
     // Google Maps SDK for Android
     implementation("com.google.android.gms:play-services-maps:20.0.0")
+
+    // Loading images
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }
