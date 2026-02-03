@@ -27,4 +27,10 @@ class UserRepository(private val userDao: UserDao = UserDao()) {
     suspend fun updateUser(user: User): Boolean {
         return userDao.updateUser(user)
     }
+
+    suspend fun clearPasswordResetFlag(userId: String): Boolean {
+        val user = getUserById(userId) ?: return false
+        val updatedUser = user.copy(requiresPasswordReset = false)
+        return updateUser(updatedUser)
+    }
 }

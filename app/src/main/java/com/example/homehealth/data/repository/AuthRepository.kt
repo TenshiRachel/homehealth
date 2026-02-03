@@ -37,6 +37,20 @@ class AuthRepository(
         }
     }
 
+    suspend fun updatePassword(newPassword: String): Result<Unit> {
+        return try {
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+                currentUser.updatePassword(newPassword).await()
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("No user logged in"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun logout() {
         auth.signOut()
     }

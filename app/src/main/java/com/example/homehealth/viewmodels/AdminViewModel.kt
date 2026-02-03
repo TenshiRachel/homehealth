@@ -104,7 +104,8 @@ class AdminViewModel : ViewModel() {
                         email = cleanEmail,
                         name = cleanName,
                         role = "caretaker",
-                        caretakerDetails = updatedDetails
+                        caretakerDetails = updatedDetails, 
+                        requiresPasswordReset = true // Set flag for first-time login
                     )
                     val success = userRepository.createUser(user)
 
