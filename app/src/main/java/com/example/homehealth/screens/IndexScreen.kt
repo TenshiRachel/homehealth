@@ -3,18 +3,11 @@ package com.example.homehealth.screens
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,11 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.homehealth.data.models.Appointment
-import com.example.homehealth.data.models.User
 import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.screens.appointment.AppointmentList
-import com.example.homehealth.ui.cards.AppointmentCard
 import com.example.homehealth.utils.FilterChipsRow
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.IndexViewModel
@@ -49,10 +40,8 @@ fun IndexScreen(
     indexViewModel: IndexViewModel,
     authViewModel: AuthViewModel = viewModel()
 ) {
-    // Get user from session
-    val user = indexViewModel.currentUser.value
     val sessionUser = authViewModel.currentUser.value
-    val appointments = indexViewModel.appointments.value
+    val appointments by indexViewModel.patientAppointments.observeAsState(emptyList())
 
     val createdChatId by indexViewModel.createdChatId.collectAsState(null)
 
@@ -70,18 +59,12 @@ fun IndexScreen(
         }
     }
 
-    LaunchedEffect(sessionUser) {
-        sessionUser?.uid?.let { userId ->
-            indexViewModel.getCurrentUser(userId)
-        }
-    }
-
     // Role-based redirect
-    LaunchedEffect(user) {
-        if (user == null) return@LaunchedEffect
+    LaunchedEffect(sessionUser) {
+        if (sessionUser == null) return@LaunchedEffect
         Log.d("Index", "Logged in successfully")
 
-        when (user.role) {
+        when (sessionUser.role) {
             "public" -> Unit
 
             "caretaker" -> {
@@ -97,19 +80,13 @@ fun IndexScreen(
             }
 
             else -> {
-                Log.w("RoleRedirect", "Role not ready yet: ${user.role}")
+                Log.w("RoleRedirect", "Role not ready yet: ${sessionUser.role}")
                 // DO NOTHING — wait for state to settle
             }
         }
     }
 
-    LaunchedEffect(user?.uid) {
-        user?.uid?.let {
-            indexViewModel.fetchAppointmentsByPatient(it)
-        }
-    }
-
-    if (user == null) {
+    if (sessionUser == null) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -124,8 +101,12 @@ fun IndexScreen(
         return
     }
 
+    LaunchedEffect(sessionUser) {
+        indexViewModel.fetchAppointmentsByPatient(sessionUser.uid)
+    }
+
     Scaffold (
-        bottomBar = { BottomNavBar(navController, user.uid, user.role) }
+        bottomBar = { BottomNavBar(navController, sessionUser.uid, sessionUser.role) }
     ) { paddingValues ->
         // Layout with top content and bottom buttons
         Column(
@@ -138,7 +119,7 @@ fun IndexScreen(
         ) {
             // Top content
             Text(
-                text = "Welcome back, ${user.name}!",
+                text = "Welcome back, ${sessionUser.name}!",
                 style = MaterialTheme.typography.headlineMedium
             )
 

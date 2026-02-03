@@ -1,50 +1,45 @@
 package com.example.homehealth.viewmodels
 
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.homehealth.data.models.Appointment
-import com.example.homehealth.data.models.User
 import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.repository.AppointmentRepository
 import com.example.homehealth.data.repository.ChatRepository
-import com.example.homehealth.data.repository.UserRepository
 import kotlinx.coroutines.launch
 
 class IndexViewModel : ViewModel() {
 
-    private val userRepository = UserRepository()
     private val appointmentRepository = AppointmentRepository()
     private val chatRepository = ChatRepository()
 
-    var currentUser = mutableStateOf<User?>(null)
-        private set
+    private val _patientAppointments = MutableLiveData<List<Appointment>>()
+    val patientAppointments: LiveData<List<Appointment>> = _patientAppointments
 
-    var appointments = mutableStateOf<List<Appointment>>(emptyList())
-        private set
+    private val _caretakerAppointments = MutableLiveData<List<Appointment>>()
+    val caretakerAppointments: LiveData<List<Appointment>> = _caretakerAppointments
 
     private val _createdChatId = MutableLiveData<String?>(null)
     val createdChatId = _createdChatId.asFlow()
 
-    fun getCurrentUser(userId: String) {
-        viewModelScope.launch {
-            currentUser.value = userRepository.getUserById(userId)
-        }
-    }
-
     fun fetchAppointmentsByPatient(userUid: String) {
         viewModelScope.launch {
-            appointments.value =
+            val fetchedAppointments =
                 appointmentRepository.getAppointmentsByPatient(userUid)
+
+            _patientAppointments.postValue(fetchedAppointments)
         }
     }
 
     fun fetchAppointmentsByCaretaker(userUid: String) {
         viewModelScope.launch {
-            appointments.value =
+            val fetchedAppointments =
                 appointmentRepository.getAppointmentsByCaretaker(userUid)
+
+            _caretakerAppointments.postValue(fetchedAppointments)
         }
     }
 

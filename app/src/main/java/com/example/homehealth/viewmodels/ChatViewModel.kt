@@ -35,10 +35,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return chatRepository.getMessagesByChat(chatId)
     }
 
-    fun observeUserChats(userId: String): Flow<List<Message>> {
-        return chatRepository.observeUserChats(userId)
-    }
-
      fun sendMessage(chatId: String, senderId: String, recipientId: String, text: String){
          viewModelScope.launch {
              val message = Message(

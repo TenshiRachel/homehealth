@@ -130,8 +130,15 @@ class AuthViewModel: ViewModel() {
 
     private fun startChatNotifications(context: Context, userId: String) {
         viewModelScope.launch {
+            var isInitialLoad = true
+
             chatRepository.observeUserChats(userId)
                 .collect { messages ->
+                    if (isInitialLoad) {
+                        isInitialLoad = false
+                        return@collect
+                    }
+
                     val latest = messages.lastOrNull() ?: return@collect
 
                     if (latest.senderId == userId) return@collect
@@ -153,9 +160,16 @@ class AuthViewModel: ViewModel() {
 
     private fun startAppointmentNotifications(context: Context, userId: String, role: String){
         viewModelScope.launch {
+            var isInitialLoad = true
+
             appointmentRepository
                 .observeAppointmentsForRecipient(userId, role == "caretaker")
                 .collect { appointments ->
+                    if (isInitialLoad) {
+                        isInitialLoad = false
+                        return@collect
+                    }
+
                     val latest = appointments.firstOrNull() ?: return@collect
 
                     if (!NotificationDeduplicator.shouldNotifyForAppointment(latest.id, latest.status)) return@collect
