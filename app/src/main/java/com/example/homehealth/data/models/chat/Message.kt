@@ -8,7 +8,8 @@ data class MessagePayload(
     val longitude: Double? = null,
     val latitude: Double? = null,
 
-    val imageBase64: String? = null
+    val imageBase64: String? = null,
+    val imageUrl: String? = null
 )
 
 data class Message(

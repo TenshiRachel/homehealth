@@ -12,6 +12,7 @@ import com.example.homehealth.data.models.chat.Message
 import com.example.homehealth.data.models.chat.MessagePayload
 import com.example.homehealth.data.enums.MessageType
 import com.example.homehealth.data.repository.ChatRepository
+import com.example.homehealth.data.repository.StorageRepository
 import com.example.homehealth.utils.LocationProvider
 import com.example.homehealth.utils.compressImageToBase64
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val chatRepository: ChatRepository = ChatRepository()
     private val locationProvider: LocationProvider = LocationProvider(application)
+    private val storageRepository = StorageRepository()
 
     private val _chat = MutableLiveData<Chat>()
     val chat: LiveData<Chat> = _chat
@@ -72,24 +74,49 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sendImage(chatId: String, senderId: String, recipientId: String, imageUri: Uri){
         viewModelScope.launch {
-            val appContext = getApplication<Application>()
+            val path = "chats/$chatId/images/${System.currentTimeMillis()}.jpg"
 
-            val base64Image = compressImageToBase64(
-                context = appContext,
-                uri = imageUri
+            val uploadResult = storageRepository.uploadFile(
+                uri = imageUri,
+                path = path
             )
 
-            val message = Message(
-                chatId = chatId,
-                senderId = senderId,
-                recipientId = recipientId,
-                type = MessageType.IMAGE,
-                payload = MessagePayload(
-                    imageBase64 = base64Image
-                )
-            )
+            uploadResult
+                .onSuccess { imageUrl ->
+                    val message = Message(
+                        chatId = chatId,
+                        senderId = senderId,
+                        recipientId = recipientId,
+                        type = MessageType.IMAGE,
+                        payload = MessagePayload(
+                            imageUrl = imageUrl
+                        )
+                    )
 
-            chatRepository.sendMessage(chatId, message)
+                    chatRepository.sendMessage(chatId, message)
+                }
+                .onFailure {
+                    Log.e("ChatViewModel", "Image upload failed", it)
+                }
+
+//            val appContext = getApplication<Application>()
+//
+//            val base64Image = compressImageToBase64(
+//                context = appContext,
+//                uri = imageUri
+//            )
+//
+//            val message = Message(
+//                chatId = chatId,
+//                senderId = senderId,
+//                recipientId = recipientId,
+//                type = MessageType.IMAGE,
+//                payload = MessagePayload(
+//                    imageBase64 = base64Image
+//                )
+//            )
+//
+//            chatRepository.sendMessage(chatId, message)
         }
     }
 }
