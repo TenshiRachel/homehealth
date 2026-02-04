@@ -52,6 +52,11 @@ fun EditProfileScreen(
             if (success) {
                 tempPhotoUri?.let { uri ->
                     imageUri = uri
+
+                    profileViewModel.uploadProfileImage(
+                        userId = sessionUser!!.uid,
+                        uri = uri
+                    )
                 }
             }
         }
@@ -59,8 +64,20 @@ fun EditProfileScreen(
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        imageUri = uri
+        uri?.let {
+            imageUri = it
+
+            profileViewModel.uploadProfileImage(
+                userId = sessionUser!!.uid,
+                uri = it
+            )
+        }
     }
+
+    val displayImage =
+        editState.profileImageUrl
+            ?: user?.profileImageUrl
+            ?: imageUri
 
     val requestPermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -129,9 +146,9 @@ fun EditProfileScreen(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (imageUri != null) {
+                if (displayImage != null) {
                     AsyncImage(
-                        model = imageUri,
+                        model = displayImage,
                         contentDescription = "Profile picture",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -185,13 +202,20 @@ fun EditProfileScreen(
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
+                enabled = !editState.isSaving,
                 onClick = {
-
                     profileViewModel.saveProfile()
                     navController.popBackStack()
                 }
             ) {
-                Text("Save")
+                if (editState.isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Save")
+                }
             }
         }
     }

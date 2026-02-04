@@ -6,6 +6,7 @@ data class User (
     val name: String = "",
     val bio: String = "",
     val role: String = "",
+    val profileImageUrl: String? = null,
     val caretakerDetails: CaretakerDetails? = null,
     val requiresPasswordReset: Boolean = false
 )
@@ -13,6 +14,7 @@ data class User (
 data class EditProfileState(
     val name: String = "",
     val bio: String = "",
+    val profileImageUrl: String? = null,
     val isSaving: Boolean = false,
     val error: String? = null
 )

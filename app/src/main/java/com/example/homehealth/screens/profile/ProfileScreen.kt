@@ -16,6 +16,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.example.homehealth.fragments.BottomNavBar
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
@@ -59,15 +61,28 @@ fun ProfileScreen(
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 🔵 Profile picture placeholder
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Profile picture",
-                    tint = Color.Gray,
+                Box(
                     modifier = Modifier
                         .size(100.dp)
-                        .clip(CircleShape)
-                )
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!profile.profileImageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = profile.profileImageUrl,
+                            contentDescription = "Profile picture",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Profile picture",
+                            tint = Color.Gray,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
