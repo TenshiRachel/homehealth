@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,7 +35,6 @@ import androidx.navigation.NavHostController
 import com.example.homehealth.data.enums.AvailabilityType
 import com.example.homehealth.data.enums.CaretakerType
 import com.example.homehealth.ui.textfield.EnumDropdownField
-import com.example.homehealth.ui.textfield.ItemDropdownField
 import com.example.homehealth.ui.textfield.MultiSelectDropdownField
 import com.example.homehealth.ui.textfield.TextField2
 import com.example.homehealth.viewmodels.SkillViewModel
