@@ -37,6 +37,7 @@ import com.example.homehealth.data.enums.AvailabilityType
 import com.example.homehealth.data.enums.CaretakerType
 import com.example.homehealth.ui.textfield.EnumDropdownField
 import com.example.homehealth.ui.textfield.ItemDropdownField
+import com.example.homehealth.ui.textfield.MultiSelectDropdownField
 import com.example.homehealth.ui.textfield.TextField2
 import com.example.homehealth.viewmodels.SkillViewModel
 import com.example.homehealth.viewmodels.CaretakerViewModel
@@ -73,8 +74,9 @@ fun EditCaretakerProfileScreen(
     var caretakerType by remember(profile) { mutableStateOf(profile!!.caretakerType) }
     var availabilityType by remember(profile) { mutableStateOf(profile!!.availabilityType) }
     var nightCare by remember(profile) { mutableStateOf(profile!!.nightCare) }
-    var selectedSkill by remember(profile) {
-        mutableStateOf(profile!!.skills.firstOrNull())
+    var selectedSkills by remember(profile) {
+//        mutableStateOf(profile!!.skills.firstOrNull())
+        mutableStateOf(profile!!.skills)
     }
 
     Scaffold(
@@ -137,13 +139,22 @@ fun EditCaretakerProfileScreen(
             }
 
             // Skill (single-select for now)
-            ItemDropdownField(
-                label = "Skill",
+            MultiSelectDropdownField(
+                label = "Skills",
                 items = skills,
-                selectedItem = selectedSkill,
-                onItemSelected = { selectedSkill = it },
+                selectedItems = selectedSkills,
+                onSelectionChange = {
+                    selectedSkills = it
+                },
                 itemLabel = { it.name }
             )
+//            ItemDropdownField(
+//                label = "Skill",
+//                items = skills,
+//                selectedItem = selectedSkill,
+//                onItemSelected = { selectedSkill = it },
+//                itemLabel = { it.name }
+//            )
 
             if (error != null) {
                 Text(
@@ -161,7 +172,7 @@ fun EditCaretakerProfileScreen(
                         caretakerType = caretakerType,
                         availabilityType = availabilityType,
                         nightCare = nightCare,
-                        skillIds = selectedSkill?.let { listOf(it.id) } ?: emptyList()
+                        skillIds = selectedSkills.map { it.id }
                     ) { success, _ ->
                         if (success) {
                             navController.popBackStack()
