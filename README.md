@@ -17,14 +17,12 @@ to travel to care facilities and giving those with travel inconveniences accessi
 1. Pull, Clone, or Download the project from GitHub
 2. Open the project in Android Studio
 3. Get a Google Maps API Key from [Google Cloud Console](https://console.cloud.google.com/)
-4. Enter the package name and SHA-1 Fingerprint of the app when prompted
+4. Set app restriction to unrestricted
+5. Insert the API Key into the AndroidManifest under the meta-data tag
 ```
-Package name: com.example.homehealth
-SHA-1 Fingerprint: Your app fingerprint
-```
-5. Insert the API Key into the local.properties file
-```
-MAPS_API_KEY="YOUR_API_KEY"
+<meta-data
+    android:name="com.google.android.geo.API_KEY"
+    android:value="YOUR_API_KEY"/>
 ```
 6. Sync gradle/wait for gradle to sync
 7. Run the application

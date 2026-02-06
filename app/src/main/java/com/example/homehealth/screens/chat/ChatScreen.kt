@@ -2,12 +2,14 @@ package com.example.homehealth.screens.chat
 
 import android.Manifest
 import android.app.Application
-import android.graphics.BitmapFactory
-import android.util.Base64
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,11 +54,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import coil.compose.AsyncImage
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -372,20 +374,75 @@ fun LocationPreview(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(location, 15f)
     }
+    val context = LocalContext.current
 
-    GoogleMap(
+    Box(
         modifier = Modifier
             .fillMaxWidth(0.75f)
             .height(180.dp)
-            .clip(RoundedCornerShape(12.dp)),
-        cameraPositionState = cameraPositionState,
-        uiSettings = MapUiSettings(
-            zoomControlsEnabled = false,
-            scrollGesturesEnabled = false
+            .clip(RoundedCornerShape(12.dp))
+    ){
+        GoogleMap(
+            modifier = Modifier.matchParentSize(),
+            cameraPositionState = cameraPositionState,
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                scrollGesturesEnabled = false,
+                rotationGesturesEnabled = false,
+                tiltGesturesEnabled = false
+            )
+        ) {
+            Marker(
+                state = MarkerState(position = location)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .padding(6.dp)
+        ) {
+            Text(
+                text = "Tap to open in Google Maps",
+                color = Color.White,
+                fontSize = 12.sp,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable {
+                    openGoogleMaps(context, latitude, longitude)
+                }
         )
-    ) {
-        Marker(
-            state = MarkerState(position = location)
+    }
+}
+
+fun openGoogleMaps(
+    context: Context,
+    lat: Double,
+    lng: Double
+) {
+    val uri = Uri.parse(
+        "geo:$lat,$lng?q=$lat,$lng"
+    )
+
+    val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+        setPackage("com.google.android.apps.maps")
+    }
+
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    } else {
+        // Fallback to browser
+        val browserIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng")
         )
+        context.startActivity(browserIntent)
     }
 }
