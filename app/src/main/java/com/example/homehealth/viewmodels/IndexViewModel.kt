@@ -9,37 +9,48 @@ import com.example.homehealth.data.models.Appointment
 import com.example.homehealth.data.models.chat.ChatUser
 import com.example.homehealth.data.repository.AppointmentRepository
 import com.example.homehealth.data.repository.ChatRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class IndexViewModel : ViewModel() {
 
     private val appointmentRepository = AppointmentRepository()
     private val chatRepository = ChatRepository()
 
-    private val _patientAppointments = MutableLiveData<List<Appointment>>()
-    val patientAppointments: LiveData<List<Appointment>> = _patientAppointments
-
-    private val _caretakerAppointments = MutableLiveData<List<Appointment>>()
-    val caretakerAppointments: LiveData<List<Appointment>> = _caretakerAppointments
+    private val _appointments = MutableStateFlow<List<Appointment>>(emptyList())
+    val appointments: StateFlow<List<Appointment>> = _appointments
 
     private val _createdChatId = MutableLiveData<String?>(null)
     val createdChatId = _createdChatId.asFlow()
 
-    fun fetchAppointmentsByPatient(userUid: String) {
-        viewModelScope.launch {
-            val fetchedAppointments =
-                appointmentRepository.getAppointmentsByPatient(userUid)
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
-            _patientAppointments.postValue(fetchedAppointments)
+
+    fun startObservingAppointments(recipientUid: String, isCaretaker: Boolean) {
+        viewModelScope.launch {
+            appointmentRepository
+                .observeAppointmentsForRecipient(recipientUid, isCaretaker)
+                .collect { list ->
+                    _appointments.value = list
+                    _isLoading.value = false
+                }
         }
     }
 
-    fun fetchAppointmentsByCaretaker(userUid: String) {
-        viewModelScope.launch {
-            val fetchedAppointments =
-                appointmentRepository.getAppointmentsByCaretaker(userUid)
-
-            _caretakerAppointments.postValue(fetchedAppointments)
+    // Helper function to parse string date
+    private fun parseDate(dateStr: String): Long {
+        return try {
+            val sdf = SimpleDateFormat("dd/MM/yy HH:mm:ss", Locale.getDefault())
+            sdf.parse(dateStr)?.time ?: 0L
+        } catch (e: Exception) {
+            0L
         }
     }
 

@@ -29,7 +29,8 @@ fun AppointmentCard(
     appointment: Appointment,
     onViewDetails: () -> Unit,
     onChat: () -> Unit,
-    userRole: String
+    userRole: String,
+    userName: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -48,13 +49,23 @@ fun AppointmentCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = appointment.name,
+                    text = if (userRole=="caretaker") appointment.name else appointment.caretakerName,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f)
                 )
 
                 AppointmentStatusChip(status = appointment.status)
             }
+
+            Text(
+                text = appointment.name
+            )
+
+            Text(
+                text = "Date/Time: " + appointment.apptDateTime.dropLast(3),
+                modifier = Modifier
+                    .padding(4.dp)
+            )
 
             HorizontalDivider()
 

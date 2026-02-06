@@ -37,8 +37,8 @@ fun CaretakerLandingScreen(
 ) {
     // Get user from session
     val sessionUser = authViewModel.currentUser.value
-    val appointments by indexViewModel.caretakerAppointments.observeAsState(emptyList())
-
+    val appointments by indexViewModel.appointments.collectAsState()
+    val isLoading by indexViewModel.isLoading.collectAsState()
     val selectedStatus = remember { mutableStateOf<String?>(null) }
     val statusOptions = listOf("requested", "booked", "completed")
     val filteredAppointments = appointments.filter { appointment ->
@@ -54,14 +54,6 @@ fun CaretakerLandingScreen(
         }
     }
 
-    LaunchedEffect(sessionUser) {
-        if (sessionUser == null) return@LaunchedEffect
-        else {
-            indexViewModel.fetchAppointmentsByCaretaker(sessionUser.uid)
-        }
-    }
-
-
     if (sessionUser == null) {
         Column(
             modifier = Modifier
@@ -75,6 +67,13 @@ fun CaretakerLandingScreen(
             CircularProgressIndicator()
         }
         return
+    }
+
+    LaunchedEffect(sessionUser.uid) {
+        indexViewModel.startObservingAppointments(
+            recipientUid = sessionUser.uid,
+            isCaretaker = true
+        )
     }
 
     Scaffold (
@@ -95,50 +94,65 @@ fun CaretakerLandingScreen(
                 style = MaterialTheme.typography.headlineMedium
             )
 
-            if (appointments.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
+            when{
+                isLoading -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                appointments.isEmpty() -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "You have no appointments yet.",
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Check back later.",
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                else -> {
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
-                        text = "You have no appointments yet.",
-                        textAlign = TextAlign.Center
+                        text = "Your Appointments",
+                        style = MaterialTheme.typography.bodyLarge
                     )
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Check back later.",
-                        textAlign = TextAlign.Center
+
+                    FilterChipsRow(
+                        title = "",
+                        options = statusOptions,
+                        selected = selectedStatus.value,
+                        onSelectedChange = { selectedStatus.value = it },
+                        label = { it.replaceFirstChar { c -> c.uppercase() } }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    AppointmentList(
+                        indexViewModel = indexViewModel,
+                        sessionUser = sessionUser,
+                        appointments = filteredAppointments,
+                        navController = navController,
+                        modifier = Modifier.weight(1f)
                     )
                 }
-            } else {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Your Appointments",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                FilterChipsRow(
-                    title = "",
-                    options = statusOptions,
-                    selected = selectedStatus.value,
-                    onSelectedChange = { selectedStatus.value = it },
-                    label = { it.replaceFirstChar { c -> c.uppercase() } }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                AppointmentList(
-                    indexViewModel = indexViewModel,
-                    sessionUser = sessionUser,
-                    appointments = filteredAppointments,
-                    navController = navController,
-                    modifier = Modifier.weight(1f)
-                )
             }
         }
     }

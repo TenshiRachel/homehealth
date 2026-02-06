@@ -20,6 +20,8 @@ import com.example.homehealth.utils.APPOINTMENT_CHANNEL_ID
 import com.example.homehealth.utils.CHAT_CHANNEL_ID
 import com.example.homehealth.utils.NotificationDeduplicator
 import com.example.homehealth.utils.showNotification
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class AuthViewModel: ViewModel() {
     private val authRepository = AuthRepository()
@@ -190,38 +192,61 @@ class AuthViewModel: ViewModel() {
         }
     }
 
-    private fun startAppointmentNotifications(context: Context, userId: String, role: String){
+    private fun startAppointmentNotifications(context: Context, userId: String, role: String) {
         viewModelScope.launch {
             var isInitialLoad = true
 
-            appointmentRepository
-                .observeAppointmentsForRecipient(userId, role == "caretaker")
+            appointmentRepository.observeAppointmentsForRecipient(userId, role == "caretaker")
                 .collect { appointments ->
+
                     if (isInitialLoad) {
                         isInitialLoad = false
                         return@collect
                     }
 
-                    val latest = appointments.firstOrNull() ?: return@collect
+                    // Iterate through all appointments
+                    appointments.forEach { appt ->
 
-                    if (!NotificationDeduplicator.shouldNotifyForAppointment(latest.id, latest.status)) return@collect
+                        // Deduplication check
+                        if (!NotificationDeduplicator.shouldNotifyForAppointment(appt.id, appt.status)) return@forEach
 
-                    if (role == "caretaker" && latest.status == "REQUESTED") {
-                        showNotification(
-                            context = context,
-                            channelId = APPOINTMENT_CHANNEL_ID,
-                            title = "New Appointment Request",
-                            body = "Patient requested '${latest.name}'"
-                        )
-                    } else if (latest.patientUid == userId) {
-                        showNotification(
-                            context = context,
-                            channelId = APPOINTMENT_CHANNEL_ID,
-                            title = "Appointment Update",
-                            body = "Appointment '${latest.name}' → ${latest.status}"
-                        )
+                        when (role) {
+                            "public" -> {
+                                if (appt.status == "BOOKED" && appt.patientUid == userId) {
+                                    showNotification(
+                                        context,
+                                        APPOINTMENT_CHANNEL_ID,
+                                        title = "Appointment Confirmed",
+                                        body = "Your appointment with '${appt.caretakerName}' +" +
+                                                " for '${appt.name}' is confirmed!"
+                                    )
+                                }
+                            }
+                            "caretaker" -> {
+                                if (appt.caretakerUid == userId && (appt.status == "REQUESTED" || appt.status == "COMPLETED")) {
+                                    val title = if (appt.status == "REQUESTED") "New Appointment Request" else "Appointment Completed"
+                                    val body = if (appt.status == "REQUESTED")
+                                        "Patient requested '${appt.name}'"
+                                    else
+                                        "Appointment '${appt.name}' is completed"
+
+                                    showNotification(context, APPOINTMENT_CHANNEL_ID, title = title, body = body)
+                                }
+                            }
+                        }
                     }
                 }
         }
     }
+
+    // Helper
+    private fun parseDate(dateStr: String): Long {
+        return try {
+            val sdf = SimpleDateFormat("dd/MM/yy HH:mm:ss", Locale.getDefault())
+            sdf.parse(dateStr)?.time ?: 0L
+        } catch (e: Exception) {
+            0L
+        }
+    }
+
 }

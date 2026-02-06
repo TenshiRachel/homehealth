@@ -51,7 +51,8 @@ fun AppointmentList(
                         userName2 = appointment.caretakerName,
                     )
                 },
-                userRole = sessionUser.role
+                userRole = sessionUser.role,
+                userName = sessionUser.name
             )
         }
     }

@@ -3,6 +3,7 @@ package com.example.homehealth.viewmodels
 import android.app.Application
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,6 +13,7 @@ import com.example.homehealth.data.models.Appointment
 import com.example.homehealth.data.models.User
 import com.example.homehealth.data.repository.AppointmentRepository
 import com.example.homehealth.data.repository.UserRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -26,8 +28,8 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
     private val userRepository = UserRepository()
     private val appointmentRepository = AppointmentRepository()
 
-    private val _currentAppointment = MutableLiveData<Appointment?>()
-    val currentAppointment: LiveData<Appointment?> = _currentAppointment
+    private val _currentAppointment = MutableStateFlow<Appointment?>(null)
+    val currentAppointment: StateFlow<Appointment?> = _currentAppointment
 
     private val _caretakers = MutableLiveData<List<User>>()
     val caretakers: LiveData<List<User>> = _caretakers
@@ -45,7 +47,7 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
     fun fetchAppointmentDetails(appointmentId: String){
         viewModelScope.launch {
             val appointment = appointmentRepository.getAppointmentDetails(appointmentId)
-            _currentAppointment.postValue(appointment)
+            //_currentAppointment.postValue(appointment)
         }
     }
 
@@ -71,24 +73,14 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun observeAppointmentsForRecipient(recipientUid: String, isCaretaker: Boolean): StateFlow<List<Appointment>> {
-        return appointmentRepository.observeAppointmentsForRecipient(recipientUid, isCaretaker)
-            .map { list ->
-                list.sortedByDescending { parseDate(it.bookingDateTime) } // Latest first
-            }
-            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-    }
-
-    // Helper function to parse string date
-    private fun parseDate(dateStr: String): Long {
-        return try {
-            val sdf = SimpleDateFormat("dd/MM/yy HH:mm:ss", Locale.getDefault())
-            sdf.parse(dateStr)?.time ?: 0L
-        } catch (e: Exception) {
-            0L
+    fun observeAppointment(appointmentId: String) {
+        viewModelScope.launch {
+            appointmentRepository.observeAppointmentById(appointmentId)
+                .collect { appointment ->
+                    _currentAppointment.value = appointment
+                }
         }
     }
-
 
     fun markAppointmentBooked(appointmentId: String) {
         viewModelScope.launch {
@@ -103,7 +95,7 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
                 appointmentRepository.updateAppointment(updatedAppointment)
 
                 // Update UI state
-                _currentAppointment.postValue(updatedAppointment)
+                //_currentAppointment.postValue(updatedAppointment)
 
             } catch (e: Exception) {
                 Log.e("ScheduleViewModel", "Failed to mark appointment booked", e)
@@ -124,7 +116,7 @@ class ScheduleViewModel(application: Application) : AndroidViewModel(application
                 appointmentRepository.updateAppointment(updatedAppointment)
 
                 // Update UI state
-                _currentAppointment.postValue(updatedAppointment)
+                //_currentAppointment.postValue(updatedAppointment)
 
             } catch (e: Exception) {
                 Log.e("ScheduleViewModel", "Failed to mark appointment completed", e)

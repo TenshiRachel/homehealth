@@ -26,7 +26,7 @@ fun AppointmentDetailsScreen(
 ) {
     val sessionUser = authViewModel.currentUser.value
 
-    val appointment by scheduleViewModel.currentAppointment.observeAsState()
+    val appointment by scheduleViewModel.currentAppointment.collectAsState()
 
     // Dialog states
     var showConfirmDialog by remember { mutableStateOf(false) }
@@ -39,7 +39,8 @@ fun AppointmentDetailsScreen(
 
     // Fetch appointment on load
     LaunchedEffect(appointmentId) {
-        scheduleViewModel.fetchAppointmentDetails(appointmentId)
+        //scheduleViewModel.fetchAppointmentDetails(appointmentId)
+        scheduleViewModel.observeAppointment(appointmentId)
     }
 
     Scaffold(

@@ -17,6 +17,11 @@ class AppointmentRepository(private val appointmentDao: AppointmentDao = Appoint
         return appointmentDao.observeAppointmentsForRecipient(recipientUid, isCaretaker)
     }
 
+    fun observeAppointmentById(appointmentId: String): Flow<Appointment?> {
+        return appointmentDao.observeAppointmentById(appointmentId)
+    }
+
+
     suspend fun getAppointmentDetails(appointmentId: String): Appointment? {
         return appointmentDao.getAppointmentById(appointmentId)
     }

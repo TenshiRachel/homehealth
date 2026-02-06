@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -41,8 +42,8 @@ fun IndexScreen(
     authViewModel: AuthViewModel = viewModel()
 ) {
     val sessionUser = authViewModel.currentUser.value
-    val appointments by indexViewModel.patientAppointments.observeAsState(emptyList())
-
+    val appointments by indexViewModel.appointments.collectAsState()
+    val isLoading by indexViewModel.isLoading.collectAsState()
     val createdChatId by indexViewModel.createdChatId.collectAsState(null)
 
     // Filter component
@@ -51,6 +52,8 @@ fun IndexScreen(
     val filteredAppointments = appointments.filter { appointment ->
         selectedStatus.value == null || appointment.status.equals(selectedStatus.value!!, ignoreCase = true)
     }
+
+    val context = LocalContext.current
 
     LaunchedEffect(createdChatId) {
         createdChatId?.let { chatId ->
@@ -101,8 +104,11 @@ fun IndexScreen(
         return
     }
 
-    LaunchedEffect(sessionUser) {
-        indexViewModel.fetchAppointmentsByPatient(sessionUser.uid)
+    LaunchedEffect(sessionUser.uid) {
+        indexViewModel.startObservingAppointments(
+            recipientUid = sessionUser.uid,
+            isCaretaker = false
+        )
     }
 
     Scaffold (
@@ -123,65 +129,80 @@ fun IndexScreen(
                 style = MaterialTheme.typography.headlineMedium
             )
 
-            if (appointments.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "You have no appointments yet.",
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { navController.navigate("browse_caretaker_screen") }
+            when {
+                isLoading -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text("Search Appointments")
+                        CircularProgressIndicator()
                     }
                 }
-            } else {
-                Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "Your Appointments",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                appointments.isEmpty() -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "You have no appointments yet.",
+                            textAlign = TextAlign.Center
+                        )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                FilterChipsRow(
-                    title = "",
-                    options = statusOptions,
-                    selected = selectedStatus.value,
-                    onSelectedChange = { selectedStatus.value = it },
-                    label = { it.replaceFirstChar { c -> c.uppercase() } }
-                )
+                        Button(
+                            onClick = { navController.navigate("browse_caretaker_screen") }
+                        ) {
+                            Text("Search Appointments")
+                        }
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                else -> {
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                AppointmentList(
-                    indexViewModel = indexViewModel,
-                    sessionUser = sessionUser!!,
-                    appointments = filteredAppointments,
-                    navController = navController,
-                    modifier = Modifier.weight(1f)
-                )
+                    Text(
+                        text = "Your Appointments",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    ),
-                    onClick = { navController.navigate("browse_caretaker_screen") }
-                ) {
-                    Text("Search for more appointments")
+                    FilterChipsRow(
+                        title = "",
+                        options = statusOptions,
+                        selected = selectedStatus.value,
+                        onSelectedChange = { selectedStatus.value = it },
+                        label = { it.replaceFirstChar { c -> c.uppercase() } }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    AppointmentList(
+                        indexViewModel = indexViewModel,
+                        sessionUser = sessionUser!!,
+                        appointments = filteredAppointments,
+                        navController = navController,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Black,
+                            contentColor = Color.White
+                        ),
+                        onClick = { navController.navigate("browse_caretaker_screen") }
+                    ) {
+                        Text("Search for more appointments")
+                    }
                 }
             }
         }

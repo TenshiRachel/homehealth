@@ -137,4 +137,15 @@ class AppointmentDao {
 
         awaitClose { listener.remove() }
     }
+
+    fun observeAppointmentById(appointmentId: String): Flow<Appointment?> = callbackFlow {
+        val listener = db.collection(APPOINTMENTS_COLLECTION)
+            .document(appointmentId)
+            .addSnapshotListener { snapshot, _ ->
+                val appointment = snapshot?.toObject(Appointment::class.java)
+                trySend(appointment)
+            }
+
+        awaitClose { listener.remove() }
+    }
 }
