@@ -101,4 +101,7 @@ dependencies {
 
     // Coroutine Play Services
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // API calls
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
 }
