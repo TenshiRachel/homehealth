@@ -35,10 +35,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import com.example.homehealth.viewmodels.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.homehealth.data.models.User
+import com.example.homehealth.utils.ClipboardMonitor
 
 @Composable
 fun LoginScreen(
@@ -51,6 +53,20 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var showPasswordResetDialog by remember { mutableStateOf(false) }
     var currentUser by remember { mutableStateOf<User?>(null) }
+
+    // Clipboard Auto-fill function
+    val clipboardText by ClipboardMonitor.clipboardText
+    LaunchedEffect(clipboardText) {
+        clipboardText?.let { text ->
+
+            if (text.contains("@") && email.isBlank()) {
+                email = text
+                Toast.makeText(context, "Email auto-filled from clipboard", Toast.LENGTH_SHORT).show()
+
+                ClipboardMonitor.updateText(null)
+            }
+        }
+    }
 
     // Show password reset dialog if needed
     if (showPasswordResetDialog && currentUser != null) {
