@@ -14,7 +14,6 @@ import com.example.homehealth.data.enums.MessageType
 import com.example.homehealth.data.repository.ChatRepository
 import com.example.homehealth.data.repository.StorageRepository
 import com.example.homehealth.utils.LocationProvider
-import com.example.homehealth.utils.compressImageToBase64
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -29,7 +28,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun fetchChat(chatId: String){
         viewModelScope.launch {
             val fetchedChat = chatRepository.getChatById(chatId)
-            _chat.postValue(fetchedChat)
+//            _chat.postValue(fetchedChat)
+            fetchedChat?.let { _chat.postValue(it) }
         }
     }
 
@@ -98,25 +98,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 .onFailure {
                     Log.e("ChatViewModel", "Image upload failed", it)
                 }
-
-//            val appContext = getApplication<Application>()
-//
-//            val base64Image = compressImageToBase64(
-//                context = appContext,
-//                uri = imageUri
-//            )
-//
-//            val message = Message(
-//                chatId = chatId,
-//                senderId = senderId,
-//                recipientId = recipientId,
-//                type = MessageType.IMAGE,
-//                payload = MessagePayload(
-//                    imageBase64 = base64Image
-//                )
-//            )
-//
-//            chatRepository.sendMessage(chatId, message)
         }
     }
 }
