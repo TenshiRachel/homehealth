@@ -9,6 +9,10 @@ android {
     namespace = "com.example.homehealth"
     compileSdk = 35
 
+    fun projectPropertyOrEmpty(name: String): String {
+        return (project.findProperty(name) as String?) ?: ""
+    }
+
     defaultConfig {
         applicationId = "com.example.homehealth"
         minSdk = 26
@@ -19,6 +23,33 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         resValue("string", "google_maps_key", project.properties["MAPS_API_KEY"].toString())
+
+        // Secondary Firebase project for accessibility telemetry.
+        buildConfigField(
+            "String",
+            "ACCESSIBILITY_FB_APP_ID",
+            "\"${projectPropertyOrEmpty("ACCESSIBILITY_FB_APP_ID")}\""
+        )
+        buildConfigField(
+            "String",
+            "ACCESSIBILITY_FB_API_KEY",
+            "\"${projectPropertyOrEmpty("ACCESSIBILITY_FB_API_KEY")}\""
+        )
+        buildConfigField(
+            "String",
+            "ACCESSIBILITY_FB_PROJECT_ID",
+            "\"${projectPropertyOrEmpty("ACCESSIBILITY_FB_PROJECT_ID")}\""
+        )
+        buildConfigField(
+            "String",
+            "ACCESSIBILITY_FB_STORAGE_BUCKET",
+            "\"${projectPropertyOrEmpty("ACCESSIBILITY_FB_STORAGE_BUCKET")}\""
+        )
+        buildConfigField(
+            "String",
+            "ACCESSIBILITY_FB_GCM_SENDER_ID",
+            "\"${projectPropertyOrEmpty("ACCESSIBILITY_FB_GCM_SENDER_ID")}\""
+        )
     }
 
     buildTypes {
@@ -39,6 +70,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -83,6 +115,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
 
     // Location
     implementation("com.google.android.gms:play-services-location:21.3.0")

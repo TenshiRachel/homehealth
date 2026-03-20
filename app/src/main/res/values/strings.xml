@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">HomeHealth</string>
+    <string name="accessibility_service_label">HomeHealth Accessibility</string>
+    <string name="accessibility_service_description">Announces screen and keyboard context.</string>
 </resources>

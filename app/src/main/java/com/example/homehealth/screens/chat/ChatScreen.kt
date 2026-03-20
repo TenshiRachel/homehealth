@@ -5,9 +5,13 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,12 +24,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.LocationOn
@@ -65,6 +72,7 @@ import androidx.navigation.NavHostController
 import com.example.homehealth.data.models.chat.Message
 import com.example.homehealth.data.enums.MessageType
 import com.example.homehealth.exploits.ImageRetrieval
+import com.example.homehealth.utils.ClipboardMonitor
 import com.example.homehealth.utils.formatTimestamp
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ChatViewModel
@@ -94,6 +102,7 @@ fun ChatScreen(navController: NavHostController,
                ),
                authViewModel: AuthViewModel = viewModel()
 ){
+    val context = LocalContext.current
     val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     val chat by chatViewmodel.chat.observeAsState(null)
@@ -102,6 +111,8 @@ fun ChatScreen(navController: NavHostController,
     val sessionUser = authViewModel.currentUser.value
 
     var messageText by remember { mutableStateOf("") }
+
+    val clipboardText by ClipboardMonitor.clipboardText
 
     LaunchedEffect(chatId) {
         chatViewmodel.fetchChat(chatId)
@@ -148,38 +159,58 @@ fun ChatScreen(navController: NavHostController,
             )
         },
         bottomBar = {
-            ChatInputBar(
-                text = messageText,
-                onTextChange = { messageText = it },
-                onSend = {
-                    if (messageText.isNotBlank()) {
-                        chatViewmodel.sendMessage(
-                            chatId = chatId,
-                            senderId = sessionUser.uid,
-                            recipientId = otherUser.uid,
-                            text = messageText
-                        )
-                        messageText = ""
-                    }
-                },
-                onPickImage = {
-                    imagePicker.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Clipboard Suggestion Chip
+                AnimatedVisibility(
+                    visible = !clipboardText.isNullOrBlank(),
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    ClipboardSuggestionChip(
+                        text = clipboardText ?: "",
+                        onPaste = {
+                            messageText += clipboardText
+                            ClipboardMonitor.updateText(null)
+                        },
+                        onDismiss = {
+                            ClipboardMonitor.updateText(null)
+                        }
                     )
-                },
-                onShareLocation = {
-                    if (permissionState.status.isGranted) {
-                        chatViewmodel.sendLocation(
-                            chatId = chatId,
-                            senderId = sessionUser.uid,
-                            recipientId = otherUser.uid
-                        )
-                    }
-                    else {
-                        permissionState.launchPermissionRequest()
-                    }
                 }
-            )
+
+                ChatInputBar(
+                    text = messageText,
+                    onTextChange = { messageText = it },
+                    onSend = {
+                        if (messageText.isNotBlank()) {
+                            chatViewmodel.sendMessage(
+                                chatId = chatId,
+                                senderId = sessionUser.uid,
+                                recipientId = otherUser.uid,
+                                text = messageText
+                            )
+                            messageText = ""
+                        }
+                    },
+                    onPickImage = {
+                        imagePicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    onShareLocation = {
+                        if (permissionState.status.isGranted) {
+                            chatViewmodel.sendLocation(
+                                chatId = chatId,
+                                senderId = sessionUser.uid,
+                                recipientId = otherUser.uid
+                            )
+                        }
+                        else {
+                            permissionState.launchPermissionRequest()
+                        }
+                    }
+                )
+            }
         }
     ) { paddingValues ->
         LazyColumn(
@@ -192,6 +223,55 @@ fun ChatScreen(navController: NavHostController,
                 ChatBubble(
                     message = message,
                     isOwnMessage = message.senderId == sessionUser.uid
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ClipboardSuggestionChip(
+    text: String,
+    onPaste: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        tonalElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .clickable { onPaste() }
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.ContentPaste,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Paste: ${text.take(20)}${if (text.length > 20) "..." else ""}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Dismiss",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         }
