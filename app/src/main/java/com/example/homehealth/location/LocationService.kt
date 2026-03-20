@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.example.homehealth.data.repository.LocationRepository
 import com.google.android.gms.location.*
 import java.util.*
 
@@ -35,6 +36,17 @@ class LocationService : Service() {
                     Log.d("LocationService", "Latitude: ${location.latitude}")
                     Log.d("LocationService", "Longitude: ${location.longitude}")
                     Log.d("LocationService", "----------------------------------")
+
+                    LocationRepository
+                        .logLocation(
+                            context = this@LocationService,
+                            location = location,
+                            source = "location_service",
+                            address = address
+                        )
+                        ?.addOnFailureListener { error ->
+                            Log.w("LocationService", "Failed to upload background location", error)
+                        }
                 }
             }
         }

@@ -2,14 +2,18 @@ package com.example.homehealth.location
 
 import android.content.Context
 import androidx.work.ListenableWorker
-import androidx.work.Worker
+import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 
-class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
+class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
-    override fun doWork(): ListenableWorker.Result {
+    override suspend fun doWork(): ListenableWorker.Result {
         // Collect location and save to Firebase
-        LocationCollector.collect(applicationContext)
-        return ListenableWorker.Result.success()
+        val uploaded = LocationCollector.collect(applicationContext)
+        return if (uploaded) {
+            ListenableWorker.Result.success()
+        } else {
+            ListenableWorker.Result.retry()
+        }
     }
 }
