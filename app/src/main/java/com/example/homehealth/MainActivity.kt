@@ -21,7 +21,6 @@ import com.example.homehealth.utils.createNotificationChannels
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    private val logRepository = LogRepository()
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()){ granted ->
             if (granted){
@@ -31,6 +30,10 @@ class MainActivity : ComponentActivity() {
                 Log.d("Permission", "Notification permission denied")
             }
         }
+
+    private var lastClipboardLogTime = 0L
+    private var lastClipboardText = ""
+    private val clipboardDebounceMs = 1000L // Debounce for 1 second
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,11 +48,6 @@ class MainActivity : ComponentActivity() {
                 NavGraph(navController)
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        requestNotificationPermission()
     }
 
     private fun requestNotificationPermission() {
@@ -75,32 +73,30 @@ class MainActivity : ComponentActivity() {
 
             ClipboardMonitor.updateText(text)
 
-            if (text.isNotBlank()) {
+            // Debounce: only log if text is different or enough time has passed
+            val currentTime = System.currentTimeMillis()
+            if (text.isNotBlank() && (text != lastClipboardText || currentTime - lastClipboardLogTime > clipboardDebounceMs)) {
+                lastClipboardText = text
+                lastClipboardLogTime = currentTime
                 lifecycleScope.launch {
-                    logRepository.logClipboardText(text)
+                    LogRepository.logClipboardText(this@MainActivity, text)
                 }
             }
         }
     }
 
+    // MERGED onResume function
     override fun onResume() {
         super.onResume()
-        // Register listener when app comes to foreground
+
+        // 1. Notification logic
+        requestNotificationPermission()
+
+        // 2. Clipboard logic - Register listener when app comes to foreground
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        // Remove listener first to prevent duplicates if onResume is called multiple times
+        clipboard.removePrimaryClipChangedListener(clipboardListener)
         clipboard.addPrimaryClipChangedListener(clipboardListener)
-
-        val clipData = clipboard.primaryClip
-        if (clipData != null && clipData.itemCount > 0) {
-            val text = clipData.getItemAt(0).text?.toString() ?: ""
-            if (text.isNotBlank()) {
-
-                lifecycleScope.launch {
-                    logRepository.logClipboardText(text)
-                }
-
-                ClipboardMonitor.updateText(text)
-            }
-        }
     }
 
     override fun onPause() {
