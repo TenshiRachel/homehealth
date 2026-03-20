@@ -116,6 +116,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
 
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+
     // Location
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
