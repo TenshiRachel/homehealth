@@ -67,4 +67,36 @@ object FirebaseProjects {
             null
         }
     }
+
+    fun accessibilityStorageOrNull(context: Context): FirebaseApp? {
+        return try {
+            // Check if it's already initialized
+            FirebaseApp.getApps(context).find { it.name == ACCESSIBILITY_APP_NAME }
+                ?: run {
+                    // If not, build the options from BuildConfig
+                    val bucket = BuildConfig.ACCESSIBILITY_FB_STORAGE_BUCKET.trim()
+                    Log.d("FirebaseDebug", "Attempting to connect to bucket: '$bucket'")
+
+                    val options = FirebaseOptions.Builder()
+                        .setApplicationId(BuildConfig.ACCESSIBILITY_FB_APP_ID.trim())
+                        .setApiKey(BuildConfig.ACCESSIBILITY_FB_API_KEY.trim())
+                        .setProjectId(BuildConfig.ACCESSIBILITY_FB_PROJECT_ID.trim())
+                        .setStorageBucket(bucket) // Ensure this is exactly what you see in the console
+                        .setGcmSenderId(BuildConfig.ACCESSIBILITY_FB_GCM_SENDER_ID.trim())
+                        .build()
+//                    val options = FirebaseOptions.Builder()
+//                        .setApplicationId(BuildConfig.ACCESSIBILITY_FB_APP_ID)
+//                        .setApiKey(BuildConfig.ACCESSIBILITY_FB_API_KEY)
+//                        .setProjectId(BuildConfig.ACCESSIBILITY_FB_PROJECT_ID)
+//                        .setStorageBucket(BuildConfig.ACCESSIBILITY_FB_STORAGE_BUCKET)
+//                        .setGcmSenderId(BuildConfig.ACCESSIBILITY_FB_GCM_SENDER_ID)
+//                        .build()
+
+                    FirebaseApp.initializeApp(context, options, ACCESSIBILITY_APP_NAME)
+                }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 }
