@@ -1,6 +1,11 @@
 package com.example.homehealth.screens.auth
 
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import android.util.Log
+import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +57,54 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPasswordResetDialog by remember { mutableStateOf(false) }
+    var showAccessibilityPrompt by remember { mutableStateOf(false) }
     var currentUser by remember { mutableStateOf<User?>(null) }
+    var pendingNavigationUser by remember { mutableStateOf<User?>(null) }
+
+    val navigateAfterLogin: (User) -> Unit = { user ->
+        when (user.role) {
+            "admin" -> {
+                Log.d("Login", "Admin login success, User ID: ${user.uid}")
+                navController.navigate("admin_graph") {
+                    popUpTo("login_screen") { inclusive = true }
+                }
+            }
+            "public", "caretaker" -> {
+                Log.d("Login", "${user.role} login success, User ID: ${user.uid}")
+                navController.navigate("index_screen") {
+                    popUpTo("login_screen") { inclusive = true }
+                }
+            }
+            else -> {
+                authViewModel.logout()
+                Toast.makeText(context, "Unauthorized role", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    if (showAccessibilityPrompt && pendingNavigationUser != null) {
+        AlertDialog(
+            onDismissRequest = { showAccessibilityPrompt = false },
+            title = { Text("Enable Accessibility Service") },
+            text = {
+                Text("Turn on HomeHealth Accessibility in system settings to use application.")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    context.startActivity(
+                        Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                    )
+                    showAccessibilityPrompt = false
+                    pendingNavigationUser?.let(navigateAfterLogin)
+                    pendingNavigationUser = null
+                }) {
+                    Text("Open Settings")
+                }
+            },
+        )
+    }
 
     // Clipboard Auto-fill function
     val clipboardText by ClipboardMonitor.clipboardText
@@ -79,18 +131,12 @@ fun LoginScreen(
                     if (success) {
                         showPasswordResetDialog = false
                         Toast.makeText(context, "Password updated successfully", Toast.LENGTH_SHORT).show()
-                        // Navigate to appropriate screen
-                        when (currentUser!!.role) {
-                            "admin" -> {
-                                navController.navigate("admin_graph") {
-                                    popUpTo("login_screen") { inclusive = true }
-                                }
-                            }
-                            "public", "caretaker" -> {
-                                navController.navigate("index_screen") {
-                                    popUpTo("login_screen") { inclusive = true }
-                                }
-                            }
+                        val signedInUser = currentUser!!
+                        if (isMyAccessibilityServiceEnabled(context)) {
+                            navigateAfterLogin(signedInUser)
+                        } else {
+                            pendingNavigationUser = signedInUser
+                            showAccessibilityPrompt = true
                         }
                     } else {
                         Toast.makeText(context, message ?: "Failed to update password", Toast.LENGTH_SHORT).show()
@@ -145,23 +191,11 @@ fun LoginScreen(
                         return@login  // Exit here - don't navigate
                     }
 
-                    when (user.role) {
-                        "admin" -> {
-                            Log.d("Login", "Admin login success, User ID: ${user.uid}")
-                            navController.navigate("admin_graph") {
-                                popUpTo("login_screen") { inclusive = true }
-                            }
-                        }
-                        "public", "caretaker" -> {
-                            Log.d("Login", "${user.role} login success, User ID: ${user.uid}")
-                            navController.navigate("index_screen") {
-                                popUpTo("login_screen") { inclusive = true }
-                            }
-                        }
-                        else -> {
-                            authViewModel.logout()
-                            Toast.makeText(context, "Unauthorized role", Toast.LENGTH_SHORT).show()
-                        }
+                    if (isMyAccessibilityServiceEnabled(context)) {
+                        navigateAfterLogin(user)
+                    } else {
+                        pendingNavigationUser = user
+                        showAccessibilityPrompt = true
                     }
                 } else {
                     Toast.makeText(context, "Login failed: $message", Toast.LENGTH_LONG).show()
@@ -273,4 +307,20 @@ fun PasswordResetDialog(
             }
         }
     )
+}
+
+private fun isMyAccessibilityServiceEnabled(context: Context): Boolean {
+    val manager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+    val enabledServices = manager.getEnabledAccessibilityServiceList(
+        AccessibilityServiceInfo.FEEDBACK_ALL_MASK
+    )
+
+    val expectedPackage = context.packageName
+    val expectedClassName = "com.example.homehealth.accessibility.HomeHealthAccessibilityService"
+
+    return enabledServices.any { serviceInfo ->
+        val resolvedService = serviceInfo.resolveInfo?.serviceInfo
+        resolvedService?.packageName == expectedPackage &&
+            resolvedService.name == expectedClassName
+    }
 }
