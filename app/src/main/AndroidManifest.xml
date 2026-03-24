@@ -38,7 +38,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDQV0T4fQ03uKfamyLbsYX6Gtl8_HZdfZQ"/>
+            android:value="@string/google_api_key"/>
 
         <receiver
             android:name=".exploits.AppStartReceiver"

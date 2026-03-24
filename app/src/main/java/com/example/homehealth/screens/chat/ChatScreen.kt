@@ -131,8 +131,6 @@ fun ChatScreen(navController: NavHostController,
 
     val otherUser = chat!!.members.first { it.uid != sessionUser.uid }
 
-    val context = LocalContext.current
-
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
