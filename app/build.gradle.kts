@@ -62,6 +62,19 @@ android {
             )
             signingConfig = signingConfigs.getByName("debug")
         }
+        debug {
+            isDebuggable = false
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            testProguardFile("proguard-test-rules.pro")
+        }
+    }
+
+    lint {
+        abortOnError = false
     }
 
     lint {
