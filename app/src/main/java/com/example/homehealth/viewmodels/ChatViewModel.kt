@@ -23,8 +23,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val locationProvider: LocationProvider = LocationProvider(application)
     private val storageRepository = StorageRepository()
 
-    private val _chat = MutableLiveData<Chat>()
-    val chat: LiveData<Chat> = _chat
+    private val _chat = MutableLiveData<Chat?>()
+    val chat: LiveData<Chat?> = _chat
 
     fun fetchChat(chatId: String){
         viewModelScope.launch {

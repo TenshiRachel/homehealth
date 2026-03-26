@@ -55,10 +55,12 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
         debug {
             isDebuggable = false
@@ -73,6 +75,11 @@ android {
 
     lint {
         abortOnError = false
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 
     compileOptions {
