@@ -74,14 +74,14 @@ fun AdminDashboardScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { navController.navigate("manage_caretakers_screen") }
-            ) {
-                Text("Manage Caretakers")
-            }
-
-            Spacer(Modifier.height(12.dp))
+//            Button(
+//                modifier = Modifier.fillMaxWidth(),
+//                onClick = { navController.navigate("manage_caretakers_screen") }
+//            ) {
+//                Text("Manage Caretakers")
+//            }
+//
+//            Spacer(Modifier.height(12.dp))
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
