@@ -19,3 +19,34 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep Firebase (breaks if renamed)
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# Keep data models (Firestore maps by field name)
+-keep class com.example.homehealth.data.models.** { *; }
+
+# Keep BuildConfig (Firebase credentials read from here)
+-keep class com.example.homehealth.BuildConfig { *; }
+
+# Kotlin coroutines
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+
+# Prevent debug UI tooling from breaking with minification
+-keep class androidx.compose.ui.tooling.** { *; }
+-keep class androidx.compose.ui.test.** { *; }
+-dontwarn androidx.compose.ui.tooling.**
+-dontwarn androidx.compose.ui.test.**
+
+# Fix SuspendToFutureAdapter missing class
+-dontwarn androidx.concurrent.**
+-keep class androidx.concurrent.** { *; }
+
+# Fix androidTest minification warning
+-dontwarn androidx.test.**
+-keep class androidx.test.** { *; }
