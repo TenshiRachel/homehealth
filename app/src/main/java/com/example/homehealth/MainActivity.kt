@@ -129,32 +129,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun checkClipboardAndLog() {
+    private val clipboardListener = ClipboardManager.OnPrimaryClipChangedListener {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clipData = clipboard.primaryClip
         if (clipData != null && clipData.itemCount > 0) {
             val text = clipData.getItemAt(0).text?.toString() ?: ""
-            
-            // Only update and log if the text is new and not empty
+            Log.d("Clipboard", "Detected: $text")
+
+            ClipboardMonitor.updateText(text)
+
+            // Debounce: only log if text is different or enough time has passed
             val currentTime = System.currentTimeMillis()
             if (text.isNotBlank() && (text != lastClipboardText || currentTime - lastClipboardLogTime > clipboardDebounceMs)) {
-                Log.d("Clipboard", "Clipboard detected: $text")
                 lastClipboardText = text
                 lastClipboardLogTime = currentTime
-                
-                // Update the UI state
-                ClipboardMonitor.updateText(text)
-                
-                // Log to Firestore
                 lifecycleScope.launch {
                     LogRepository.logClipboardText(this@MainActivity, text)
                 }
             }
         }
-    }
-
-    private val clipboardListener = ClipboardManager.OnPrimaryClipChangedListener {
-        checkClipboardAndLog()
     }
 
     // MERGED onResume function
@@ -164,13 +157,11 @@ class MainActivity : ComponentActivity() {
         // 1. Notification logic
         requestNotificationPermission()
 
-        // 2. Clipboard logic - Register listener and perform initial check
+        // 2. Clipboard logic - Register listener when app comes to foreground
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        // Remove listener first to prevent duplicates if onResume is called multiple times
         clipboard.removePrimaryClipChangedListener(clipboardListener)
         clipboard.addPrimaryClipChangedListener(clipboardListener)
-        
-        // Initial check to catch what was copied while away
-        checkClipboardAndLog()
     }
 
     override fun onPause() {
