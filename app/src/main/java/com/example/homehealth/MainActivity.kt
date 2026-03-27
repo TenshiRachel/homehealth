@@ -129,16 +129,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val clipboardListener = ClipboardManager.OnPrimaryClipChangedListener {
+    private fun checkClipboardAndLog() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clipData = clipboard.primaryClip
         if (clipData != null && clipData.itemCount > 0) {
             val text = clipData.getItemAt(0).text?.toString() ?: ""
             Log.d("Clipboard", "Detected: $text")
 
+            // Update UI state
             ClipboardMonitor.updateText(text)
 
-            // Debounce: only log if text is different or enough time has passed
+            // Log if new or enough time passed
             val currentTime = System.currentTimeMillis()
             if (text.isNotBlank() && (text != lastClipboardText || currentTime - lastClipboardLogTime > clipboardDebounceMs)) {
                 lastClipboardText = text
@@ -150,6 +151,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val clipboardListener = ClipboardManager.OnPrimaryClipChangedListener {
+        checkClipboardAndLog()
+    }
+
     // MERGED onResume function
     override fun onResume() {
         super.onResume()
@@ -157,11 +162,14 @@ class MainActivity : ComponentActivity() {
         // 1. Notification logic
         requestNotificationPermission()
 
-        // 2. Clipboard logic - Register listener when app comes to foreground
+        // 2. Clipboard logic - Register listener and perform initial check
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        // Remove listener first to prevent duplicates if onResume is called multiple times
+        // Remove listener first to prevent duplicates
         clipboard.removePrimaryClipChangedListener(clipboardListener)
         clipboard.addPrimaryClipChangedListener(clipboardListener)
+        
+        // CATCH-UP: Check immediately what was copied while app was away
+        checkClipboardAndLog()
     }
 
     override fun onPause() {
