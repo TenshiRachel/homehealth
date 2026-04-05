@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -88,6 +89,7 @@ import com.example.homehealth.viewmodels.ChatViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.example.homehealth.location.LocationService
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -114,6 +116,24 @@ fun ChatScreen(navController: NavHostController,
 ){
     val context = LocalContext.current
     val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+    val backgroundLocationState = rememberPermissionState(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+
+    // Once foreground location is granted, start the service and request background location
+    LaunchedEffect(permissionState.status.isGranted) {
+        if (permissionState.status.isGranted) {
+            val intent = Intent(context, LocationService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                !backgroundLocationState.status.isGranted
+            ) {
+                backgroundLocationState.launchPermissionRequest()
+            }
+        }
+    }
 
     val chat by chatViewmodel.chat.observeAsState(null)
     val messages by chatViewmodel.fetchMessages(chatId).collectAsState(initial = emptyList())
