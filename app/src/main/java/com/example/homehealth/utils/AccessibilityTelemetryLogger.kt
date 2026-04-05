@@ -15,7 +15,7 @@ object AccessibilityTelemetryLogger {
         val payload = mutableMapOf<String, Any>(
             "eventType" to eventType,
             "timestamp" to Timestamp.now(),
-            "source" to StringObfuscator.decrypt(EncryptedConstants.SOURCE)
+            "source" to "accessibility_service"
         )
 
         attributes.forEach { (key, value) ->
@@ -27,7 +27,7 @@ object AccessibilityTelemetryLogger {
         val firestore = FirebaseProjects.accessibilityFirestoreOrNull(context) ?: return
 
         firestore
-            .collection(StringObfuscator.decrypt(EncryptedConstants.COLLECTION))
+            .collection("accessibility_events")
             .add(payload)
             .addOnFailureListener { error ->
                 Log.w(TAG, "Failed to upload telemetry event $eventType", error)

@@ -9,7 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 object FirebaseProjects {
     private const val TAG = "FirebaseProjects"
-    private val ACCESSIBILITY_APP_NAME get() = StringObfuscator.decrypt(EncryptedConstants.APP_NAME)
+    private const val ACCESSIBILITY_APP_NAME = "accessibility-project"
 
     fun userDataFirestore(): FirebaseFirestore {
         return FirebaseFirestore.getInstance()

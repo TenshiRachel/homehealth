@@ -1,1 +1,0 @@
--dontwarn androidx.concurrent.futures.SuspendToFutureAdapter
